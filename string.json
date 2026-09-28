@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tailgdd Vehicle",
+        "description": "填写抓包获取的授权信息",
+        "data": {
+          "frame": "车辆 frame（序列号）",
+          "uid": "用户 ID",
+          "token": "授权令牌 authorization",
+          "cookie": "Cookie（可选）"
+        }
+      }
+    },
+    "error": {
+      "token_required": "授权令牌不能为空"
+    },
+    "abort": {
+      "already_configured": "该车辆已配置"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "更新授权信息",
+        "data": {
+          "frame": "车辆 frame",
+          "uid": "用户 ID",
+          "token": "授权令牌",
+          "cookie": "Cookie"
+        }
+      }
+    }
+  }
+}

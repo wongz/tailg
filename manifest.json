@@ -1,0 +1,12 @@
+{
+  "domain": "tailgdd",
+  "name": "Tailgdd Vehicle",
+  "version": "1.0.0",
+  "documentation": "https://github.com/your/tailgdd",
+  "issue_tracker": "https://github.com/your/tailgdd/issues",
+  "codeowners": ["@your_username"],
+  "dependencies": [],
+  "requirements": ["paho-mqtt>=1.6.1"],
+  "iot_class": "cloud_push",
+  "config_flow": true
+}

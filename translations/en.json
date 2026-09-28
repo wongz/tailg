@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tailgdd Vehicle",
+        "description": "Enter the authorization info from the packet capture",
+        "data": {
+          "frame": "Vehicle Frame",
+          "uid": "User ID",
+          "token": "Authorization Token",
+          "cookie": "Cookie (optional)"
+        }
+      }
+    },
+    "error": {
+      "token_required": "Token is required"
+    },
+    "abort": {
+      "already_configured": "This vehicle is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Update authorization",
+        "data": {
+          "frame": "Vehicle Frame",
+          "uid": "User ID",
+          "token": "Authorization Token",
+          "cookie": "Cookie"
+        }
+      }
+    }
+  }
+}
