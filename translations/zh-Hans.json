@@ -5,7 +5,7 @@
         "title": "Tailgdd 车辆集成",
         "description": "填写抓包获取的授权信息",
         "data": {
-          "frame": "车辆 frame",
+          "frame": "车架号",
           "uid": "用户 ID",
           "token": "授权令牌",
           "cookie": "Cookie（可选）"
@@ -24,7 +24,7 @@
       "init": {
         "title": "更新授权信息",
         "data": {
-          "frame": "车辆 frame",
+          "frame": "车架号",
           "uid": "用户 ID",
           "token": "授权令牌",
           "cookie": "Cookie"
