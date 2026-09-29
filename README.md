@@ -53,7 +53,7 @@
 
 - Home Assistant **2022.8.0** 或更高版本
 - Python 3.9+
-- 已开通 **tailgdd** 账号并绑定车辆
+- 已开通 **台铃智能** 账号并绑定车辆
 
 ### 方式一：HACS（推荐）
 
@@ -61,7 +61,7 @@
 2. 右上角 ⋮ → **自定义存储库**
 3. 添加 URL：
 
-       https://github.com/your-username/hass-tailgdd
+       https://github.com/wongz/tailgdd
 
 4. 类别选 **Integration** → 添加
 5. 搜索 **Tailgdd Vehicle** → 安装
@@ -69,7 +69,7 @@
 
 ### 方式二：手动安装
 
-1. 下载最新 [Release](https://github.com/your-username/hass-tailgdd/releases)
+1. 下载最新 [Release](https://github.com/wongz/tailgdd/releases)
 2. 解压到 `custom_components/tailgdd/`
 3. 确认目录结构：
 
@@ -78,7 +78,6 @@
            └── tailgdd/
                ├── __init__.py
                ├── api.py
-               ├── amap.py
                ├── button.py
                ├── config_flow.py
                ├── const.py
@@ -100,7 +99,7 @@
 
 ### 1. 获取授权信息
 
-使用抓包工具（如 **Fiddler**、**Charles**、**mitmproxy**）捕获 tailgdd APP 的网络请求，找到 `carStatus` 接口，提取以下字段：
+使用抓包工具（如 **Fiddler**、**Reqable**、**mitmproxy**）捕获 台铃智能 APP 的网络请求，找到 `carStatus` 接口，提取以下字段：
 
 | 字段 | 说明 | 示例 |
 |------|------|------|
@@ -118,17 +117,17 @@
 
 ### 3. 部署卡片
 
-插件会自动部署卡片 JS 到 `/config/www/`，你需要手动加载资源：
+插件会自动部署卡片 JS 到 `/config/www/`及添加对应资源，你可以检查资源是否添加成功：
 
 1. 打开 **设置 → 仪表盘 → 右上角 ⋮ → 资源**
-2. 添加两条：
+2. 两条记录：
 
    | URL | 类型 |
    |-----|------|
    | `/local/tailgdd-card.js` | JavaScript 模块 |
    | `/local/tailgdd-map-card.js` | JavaScript 模块 |
 
-3. 保存 → **强制刷新浏览器**（`Ctrl + Shift + R`）
+注意 **强制刷新浏览器**（`Ctrl + Shift + R`）
 
 ---
 
@@ -174,7 +173,7 @@
 | sensor | sensor.tailg_9179_gps_time | 定位时间 | 最后定位时间 |
 | sensor | sensor.tailg_9179_online | 在线 | 在线/离线 |
 | sensor | sensor.tailg_9179_mute | 静音 | 正常/已静音 |
-| sensor | sensor.tailg_9179_status | 车辆状态 | 未知/静止/设防/行驶/报警/充电 |
+| sensor | sensor.tailg_9179_status | 车辆状态 | 未知|
 | switch | switch.tailg_9179_power | 电源 | 开电/关电 |
 | switch | switch.tailg_9179_defence | 防盗 | 设防/撤防 |
 | button | button.tailg_9179_search | 寻车 | 一键鸣笛 |
@@ -285,7 +284,7 @@
 
 **排查**：
 1. 看日志里是否有 `指令已发布: APP_S/CMD/...`
-2. 打开官方 APP，确认 **没有被同时登录**（HA 和 APP 会互踢）
+2. 打开官方 APP，确认登录状态有效
 3. 确认车辆 **ACC 状态**（有些指令需要在特定状态下才能执行）
 
 ### 历史轨迹打不开
@@ -301,7 +300,7 @@
 
 ## 📡 接口说明
 
-集成使用以下 tailgdd 官方接口：
+集成使用以下官方接口：
 
 | 接口 | 路径 | 用途 |
 |------|------|------|
@@ -320,10 +319,8 @@ MQTT 通信：
 
 1. **仅限个人使用**：本项目仅用于学习交流，请勿用于商业用途
 2. **Token 时效**：tailgdd 的 `authorization` 有时效，过期后需重新抓包更新
-3. **APP 互踢**：HA 与官方 APP 同时在线时，MQTT 连接会互踢。建议不同时登录
-4. **车辆离线**：若车辆长时间离线（如电池耗尽、地库无信号），所有控制指令均无效
-5. **坐标系**：tailgdd 使用 GCJ-02（高德体系），集成内部自动转换
-6. **高德 API 配额**：如使用高德逆地理，请注意 key 的配额限制
+3. **车辆离线**：若车辆长时间离线（如电池耗尽、地库无信号），所有控制指令均无效
+4. **坐标系**：tailgdd 使用 GCJ-02（高德体系），集成内部自动转换
 
 ---
 
@@ -335,7 +332,6 @@ MQTT 通信：
     ├── const.py             # 常量定义
     ├── config_flow.py       # 配置流程
     ├── api.py               # carStatus 接口封装
-    ├── amap.py              # 高德逆地理（可选）
     ├── coordinator.py       # HTTP 轮询协调器
     ├── http_api.py          # 供前端卡片调用的代理 API
     ├── sensor.py            # 传感器实体
@@ -354,8 +350,8 @@ MQTT 通信：
 
 ### 开发环境
 
-    git clone https://github.com/your-username/hass-tailgdd.git
-    cd hass-tailgdd
+    git clone https://github.com/wongz/tailgdd.git
+    cd tailgdd
     # 把 custom_components/tailgdd/ 软链到 HA 的 config 目录
     ln -s $(pwd)/custom_components/tailgdd ~/.homeassistant/custom_components/tailgdd
 
@@ -375,7 +371,7 @@ MQTT 通信：
 
 ## ⚠️ 免责声明
 
-本项目为个人学习项目，与 **台铃（Tailgdd）** 官方无关。使用本项目所产生的一切后果由使用者自行承担，包括但不限于：
+本项目为个人学习项目，与 **台铃** 官方无关。使用本项目所产生的一切后果由使用者自行承担，包括但不限于：
 
 - 账号被封禁
 - 车辆被误操作
@@ -389,7 +385,6 @@ MQTT 通信：
 
 - [Home Assistant](https://www.home-assistant.io/)
 - [Leaflet](https://leafletjs.com/)
-- [高德开放平台](https://lbs.amap.com/)
 - 所有贡献者和使用者
 
 ---
