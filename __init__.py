@@ -199,7 +199,7 @@ class TailgddMqttClient:
                 ensure_ascii=False,
             )
             client.publish(self.cmd_topic, probe, qos=0)
-            _LOGGER.info("已发送 searchDeviceInfo（仅一次）")
+            _LOGGER.info("已发送 searchDeviceInfo")
 
             self.hass.loop.call_soon_threadsafe(
                 self.hass.async_create_task,
@@ -246,7 +246,7 @@ class TailgddMqttClient:
         await self.hass.async_add_executor_job(
             self.client.publish, self.cmd_topic, payload, 1
         )
-        _LOGGER.info("指令已发布: %s -> %s", self.cmd_topic, payload)
+        _LOGGER.debug("指令已发布: %s -> %s", self.cmd_topic, payload)
 
     def disconnect(self):
         try:

@@ -1178,7 +1178,7 @@ class TailgddHistoryDialog extends LitElement {
                                 </div>
                                 <div class="trip-line2">
                                     <span>${fmtDur(t.duration_sec)}</span>
-                                    <span>均速 ${t.average_speed.toFixed(1)} km/h</span>
+                                    <span>极速 ${t.max_speed} / 均速 ${t.average_speed.toFixed(1)} km/h</span>
                                 </div>
                             </div>
                         </div>

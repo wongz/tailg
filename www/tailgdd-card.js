@@ -193,7 +193,6 @@ class TailgddCard extends LitElement {
 
         return {
             type: "custom:tailgdd-card",
-            name: "",
             entities: {
                 online:   e("sensor", "online"),
                 battery:  e("sensor", "battery"),
