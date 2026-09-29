@@ -145,5 +145,5 @@ async def async_register_views(hass: HomeAssistant) -> None:
     """注册 HTTP 视图。"""
     hass.http.register_view(TailgddMonthView)
     hass.http.register_view(TailgddDayView)
-    hass.http.register_view(TailgddCarStatusView)
+    #hass.http.register_view(TailgddCarStatusView)
     _LOGGER.info("Tailgdd HTTP API 已注册")

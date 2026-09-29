@@ -25,7 +25,7 @@ CONF_UID    = "uid"
 CONF_TOKEN  = "token"
 CONF_COOKIE = "cookie"
 
-DEFAULT_SCAN_INTERVAL = 300
+DEFAULT_SCAN_INTERVAL = 180
 
 # ==================== MQTT 主题模板 ====================
 TOPIC_STATUS_TPL = "S_APP/STATUS/{imei}"

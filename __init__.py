@@ -27,7 +27,7 @@ except ImportError:
 from .api import async_fetch_car_status
 from .const import (
     DOMAIN, CONF_FRAME, CONF_UID, CONF_TOKEN, CONF_COOKIE,
-    TOPIC_STATUS_TPL, TOPIC_CMD_TPL, CLIENT_ID_TPL,
+    TOPIC_STATUS_TPL, TOPIC_CMD_TPL, CLIENT_ID_TPL, DEFAULT_SCAN_INTERVAL,
     device_suffix,
 )
 
@@ -336,7 +336,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # ---------- 4. HTTP 协调器 ----------
     from .coordinator import TailgddHttpCoordinator
-    coordinator = TailgddHttpCoordinator(hass, entry, interval=60, creds=creds)
+    coordinator = TailgddHttpCoordinator(hass, entry, interval=DEFAULT_SCAN_INTERVAL, creds=creds)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id]["coordinator"] = coordinator

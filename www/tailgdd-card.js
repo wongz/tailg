@@ -318,7 +318,7 @@ class TailgddCard extends LitElement {
                     <div class="metric">
                         <div class="metric-label">电压</div>
                         <div class="metric-value">
-                            ${voltage != null ? voltage.toFixed(1) : "--"}<small>V</small>
+                            ${voltage != null ? voltage : "--"}<small>V</small>
                         </div>
                     </div>
                 </div>

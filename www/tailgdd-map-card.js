@@ -208,7 +208,6 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
         })
     }));
 
-    // ★ 当前位置转 GCJ-02
     let curJson = null;
     if (currentPos && currentPos.lng && currentPos.lat) {
         const c = wgs84ToGcj02(Number(currentPos.lng), Number(currentPos.lat));
@@ -257,7 +256,6 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
     font-weight: 600;
   }
 
-  /* ★ 当前位置脉冲标记 */
   .cur-marker { position:relative; width:40px; height:40px; }
   .cur-marker-pulse {
     position:absolute; inset:0; border-radius:50%;
@@ -485,7 +483,6 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
       });
     });
 
-    // ★ 绘制当前位置（脉冲标记）
     if (curPos) {
       var curIcon = L.divIcon({
         className: '',
@@ -505,7 +502,6 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
         .addTo(map)
         .bindTooltip('当前位置', { direction: 'top', offset: [0, -20] });
 
-      // 当前位置也算入边界
       allBounds.push([curPos.lat, curPos.lng]);
     }
 
@@ -562,13 +558,12 @@ class TailgddMapCard extends LitElement {
             }
             iframe {
                 width: 100%; height: 100%; border: none; display: block;
-                /* ★ iframe 不接收鼠标事件，点击穿透到遮罩 */
                 pointer-events: none;
             }
             .overlay {
                 position: absolute; inset: 0;
                 display: flex; flex-direction: column; justify-content: flex-end;
-                pointer-events: auto;        /* ★ 可点击 */
+                pointer-events: auto;
                 cursor: pointer;
                 padding: 10px;
                 background: linear-gradient(transparent 60%, rgba(0,0,0,.55));
@@ -663,9 +658,7 @@ class TailgddMapCard extends LitElement {
     }
 
     _openHistory() {
-        // ★ 防止连点
         if (this._opening) return;
-        // ★ 若已有对话框，先移除再打开
         const existing = document.querySelector('tailgdd-history-dialog');
         if (existing && existing.parentNode) {
             existing.parentNode.removeChild(existing);
@@ -791,18 +784,51 @@ class TailgddHistoryDialog extends LitElement {
                 overflow: hidden;
                 border-top: 1px solid var(--divider-color);
             }
+
+            /* ★ 顶部行：月份下拉 + 月度统计（同一行） */
             .side-head {
-                padding: 10px 12px;
+                padding: 8px 12px;
                 border-bottom: 1px solid var(--divider-color);
-                display: flex; gap: 8px; flex: 0 0 auto;
+                display: flex;
+                gap: 10px;
+                flex: 0 0 auto;
+                align-items: center;
             }
             .month-select {
-                flex: 1; padding: 8px 10px; border-radius: 8px;
+                flex: 0 0 auto;
+                padding: 6px 10px;
+                border-radius: 8px;
                 border: 1px solid var(--divider-color);
                 background: var(--card-background-color);
                 color: var(--primary-text-color);
-                font-size: 13px; font-family: inherit;
+                font-size: 13px;
+                font-family: inherit;
+                min-width: 110px;
             }
+
+            /* ★ 月度统计：与每日统计相同列宽，右对齐 */
+            .month-stats {
+                display: flex;
+                align-items: baseline;
+                gap: 0;
+                flex: 0 0 auto;
+                margin-left: auto;
+                font-size: 12px;
+                color: var(--secondary-text-color);
+                font-variant-numeric: tabular-nums;
+                font-feature-settings: "tnum";
+                white-space: nowrap;
+                font-weight: 600;
+            }
+            .month-stats > span {
+                text-align: right;
+                white-space: nowrap;
+                flex: 0 0 auto;
+            }
+            .row-stats > .col-trips { width: 50px; }
+            .row-stats > .col-km    { width: 66px; }
+            .row-stats > .col-dur   { width: 77px; }
+
             .day-list {
                 flex: 1 1 auto; overflow-y: auto;
                 padding: 6px 0 20px; min-height: 0;
@@ -866,9 +892,6 @@ class TailgddHistoryDialog extends LitElement {
                 white-space: nowrap;
                 flex: 0 0 auto;
             }
-            .day-head-right > .col-trips { width: 46px; }
-            .day-head-right > .col-km    { width: 66px; }
-            .day-head-right > .col-dur   { width: 86px; }
 
             .day-trips { display: none; padding: 4px 0; }
             .day-group.expanded .day-trips { display: block; }
@@ -915,24 +938,32 @@ class TailgddHistoryDialog extends LitElement {
                 .head .close { width: 36px; height: 36px; }
                 .map-wrap, .list-wrap { padding-top: 54px; box-sizing: border-box; }
 
+                .side-head { padding: 10px 14px; gap: 12px; }
+                .month-select { font-size: 13px; }
+                .month-stats { font-size: 13px; }
+                .row-stats > .col-trips { width: 52px; }
+                .row-stats > .col-km    { width: 76px; }
+                .row-stats > .col-dur   { width: 88px; }
+
                 .day-head {
                     font-size: 13px;
                     padding: 12px 14px;
                     gap: 10px;
                 }
-                .day-head-right > .col-trips { width: 52px; }
-                .day-head-right > .col-km    { width: 76px; }
-                .day-head-right > .col-dur   { width: 100px; }
             }
 
             @media (max-width: 380px) {
                 .head h2 { font-size: 13px; }
+                .side-head { padding: 6px 10px; gap: 8px; }
+                .month-select { font-size: 12px; padding: 5px 8px; min-width: 96px; }
+                .month-stats { font-size: 11px; }
+                .row-stats > .col-trips { width: 38px; }
+                .row-stats > .col-km    { width: 56px; }
+                .row-stats > .col-dur   { width: 66px; }
+
                 .day-head { padding: 9px 10px; font-size: 12px; gap: 6px; }
                 .day-week { display: none; }
                 .day-head-right > span { font-size: 10px; }
-                .day-head-right > .col-trips { width: 38px; }
-                .day-head-right > .col-km    { width: 56px; }
-                .day-head-right > .col-dur   { width: 76px; }
             }
         `;
     }
@@ -950,19 +981,17 @@ class TailgddHistoryDialog extends LitElement {
         this._historyPushed = false;
         this._onPopState = null;
     }
-    
+
     connectedCallback() {
         super.connectedCallback();
-    
-        // ★ 压入一条历史记录（用于浏览器返回键捕获）
+
         try {
             history.pushState({ tailgddDialog: true }, '');
             this._historyPushed = true;
         } catch (e) {
             console.warn('[tailgdd-history] pushState 失败', e);
         }
-    
-        // ★ 监听返回事件
+
         this._onPopState = () => {
             if (this._historyPushed) {
                 this._historyPushed = false;
@@ -979,9 +1008,8 @@ class TailgddHistoryDialog extends LitElement {
             this._onPopState = null;
         }
     }
-    
+
     _closeInternal() {
-        // 真正移除对话框（不发 dialog-closed，避免触发 history.back）
         this.dispatchEvent(new CustomEvent("dialog-closed", { bubbles: true }));
     }
 
@@ -1038,6 +1066,25 @@ class TailgddHistoryDialog extends LitElement {
              + (Number(t.sec) || 0);
     }
 
+    /* ★ 月度统计（结构化） */
+    _monthSummary() {
+        if (!this._days || this._days.length === 0) {
+            return { days: 0, trips: 0, km: '0 km', dur: '0秒' };
+        }
+        let totalMileage = 0, totalDuration = 0, totalTrips = 0;
+        this._days.forEach(d => {
+            totalMileage += d.totalMileage;
+            totalDuration += d.totalDuration;
+            totalTrips += d.trips.length;
+        });
+        return {
+            days: this._days.length,
+            trips: totalTrips,
+            km:    fmtKm(totalMileage),
+            dur:   fmtDur(totalDuration),
+        };
+    }
+
     async _selectDay(date) {
         this._activeDate = date;
         const groups = this.shadowRoot.querySelectorAll(".day-group");
@@ -1050,7 +1097,6 @@ class TailgddHistoryDialog extends LitElement {
         await this._loadDayTracks(day);
     }
 
-    /* ★ 读取当前车辆位置 */
     _getTrackerEntityId() {
         const ids = Object.keys(this.hass.states).filter(id =>
             /^device_tracker\.tailg_([a-z0-9]{4})_location$/.test(id)
@@ -1088,19 +1134,14 @@ class TailgddHistoryDialog extends LitElement {
         }
 
         this._currentTracks = allTracks;
-        // ★ 传入当前位置
         const curPos = this._getCurrentPosition();
         this._iframeSrcdoc = buildHistoryIframeHtml(this._baseMode, allTracks, curPos);
     }
 
     _close() {
-        // ★ 用户主动关闭（点 ✕ 按钮）
         if (this._historyPushed) {
             this._historyPushed = false;
-            // 回退一格历史（把 pushState 压的那条弹出去）
             try { history.back(); } catch (e) {}
-            // 不在这里 dialog-closed，交给 popstate 回调统一处理
-            // 兜底：如果 100ms 后 popstate 没触发，强制关闭
             setTimeout(() => {
                 if (this.parentNode) {
                     this.dispatchEvent(new CustomEvent("dialog-closed", { bubbles: true }));
@@ -1108,11 +1149,11 @@ class TailgddHistoryDialog extends LitElement {
             }, 100);
             return;
         }
-        // 没有 push 过历史，直接关闭
         this.dispatchEvent(new CustomEvent("dialog-closed", { bubbles: true }));
     }
 
     render() {
+        const m = this._monthSummary();
         return html`
             <div class="dialog">
                 <div class="head">
@@ -1135,11 +1176,20 @@ class TailgddHistoryDialog extends LitElement {
                                     this._month = e.target.value;
                                     this._loadMonth(this._month);
                                 }}>
-                            ${this._months.map(m => html`
-                                <option value=${m} ?selected=${m === this._month}>${m}</option>
+                            ${this._months.map(mo => html`
+                                <option value=${mo} ?selected=${mo === this._month}>${mo}</option>
                             `)}
                         </select>
+                        ${this._days && this._days.length > 0
+                            ? html`<div class="month-stats row-stats">
+                                      <span>${m.days} 天</span>
+                                       <span class="col-trips">${m.trips} 段</span>
+                                       <span class="col-km">${m.km}</span>
+                                       <span class="col-dur">${m.dur}</span>
+                                   </div>`
+                            : ''}
                     </div>
+
                     <div class="day-list">
                         ${this._days.length === 0
                             ? html`<div style="padding:20px;text-align:center;opacity:.5;font-size:12px">
@@ -1161,7 +1211,7 @@ class TailgddHistoryDialog extends LitElement {
                         <span class="day-date">${p.mmdd}</span>
                         <span class="day-week">${p.week}</span>
                     </div>
-                    <div class="day-head-right">
+                    <div class="day-head-right row-stats">
                         <span class="col-trips">${d.trips.length} 段</span>
                         <span class="col-km">${fmtKm(d.totalMileage)}</span>
                         <span class="col-dur">${fmtDur(d.totalDuration)}</span>
