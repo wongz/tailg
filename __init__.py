@@ -12,6 +12,17 @@ import paho.mqtt.client as mqtt
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
+import json
+# Lovelace 相关导入做容错，兼容不同 HA 版本
+try:
+    from homeassistant.components.lovelace import DOMAIN as LOVELACE_DOMAIN
+except ImportError:
+    LOVELACE_DOMAIN = "lovelace"
+
+try:
+    from homeassistant.components.lovelace.resources import ResourceStorageCollection
+except ImportError:
+    ResourceStorageCollection = None
 
 from .api import async_fetch_car_status
 from .const import (
@@ -22,25 +33,105 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.BUTTON, Platform.SWITCH]
+PLATFORMS = [
+    Platform.SENSOR,
+    Platform.BUTTON,
+    Platform.SWITCH,
+    Platform.DEVICE_TRACKER,   # ★ 新增
+]
 
 
 async def async_setup(hass: HomeAssistant, config) -> bool:
-    """初始化时把卡片 JS 复制到 /config/www 供前端加载。"""
+    """初始化：部署卡片 JS + 注册 Lovelace 资源 + 注册 HTTP API。"""
     try:
-        src = Path(__file__).parent / "www" / "tailgdd-card.js"
+        # ---------- 1. 复制卡片 JS ----------
+        src_dir = Path(__file__).parent / "www"
         dst_dir = Path(hass.config.path("www"))
         dst_dir.mkdir(parents=True, exist_ok=True)
-        dst = dst_dir / "tailgdd-card.js"
 
-        if src.exists():
-            shutil.copy2(src, dst)
-            _LOGGER.info("Tailgdd 卡片已部署: %s", dst)
-        else:
-            _LOGGER.warning("未找到卡片 JS: %s", src)
+        card_files = [
+            "tailgdd-card.js",
+            "tailgdd-map-card.js",
+        ]
+
+        for fname in card_files:
+            src = src_dir / fname
+            dst = dst_dir / fname
+            if src.exists():
+                shutil.copy2(src, dst)
+                _LOGGER.info("Tailgdd 卡片已部署: %s", dst)
+            else:
+                _LOGGER.warning("未找到卡片 JS: %s", src)
+
+        # ---------- 2. 注册 Lovelace 资源（延迟执行，等 Lovelace 初始化） ----------
+        async def _delayed_register():
+            await asyncio.sleep(5)
+            for fname in card_files:
+                await _register_lovelace_resource(
+                    hass, f"/local/{fname}"
+                )
+
+        hass.async_create_task(_delayed_register())
+
+        # ---------- 3. 注册 HTTP API ----------
+        from .http_api import async_register_views
+        await async_register_views(hass)
+
     except Exception as err:
-        _LOGGER.warning("复制卡片 JS 失败: %s", err)
+        _LOGGER.warning("初始化失败: %s", err)
+
     return True
+
+
+async def _register_lovelace_resource(hass: HomeAssistant, url: str) -> None:
+    """把卡片 JS 注册到 Lovelace 资源列表（幂等，兼容 HA 2022.x）。"""
+    try:
+        lovelace = hass.data.get("lovelace")
+        if not lovelace:
+            _LOGGER.warning(
+                "无法注册 Lovelace 资源（YAML 模式或未初始化）。"
+                "请手动添加：%s", url
+            )
+            return
+
+        resources = lovelace.get("resources") if isinstance(lovelace, dict) else None
+        if not resources:
+            _LOGGER.warning("未找到 Lovelace 资源集合，请手动添加：%s", url)
+            return
+
+        # 确保已加载
+        if hasattr(resources, "async_load") and not getattr(resources, "loaded", True):
+            try:
+                await resources.async_load()
+            except Exception:
+                pass
+
+        # 幂等检查
+        try:
+            items = resources.async_items()
+        except Exception:
+            items = []
+
+        for item in items:
+            if isinstance(item, dict) and item.get("url") == url:
+                _LOGGER.debug("Lovelace 资源已存在: %s", url)
+                return
+
+        # 创建
+        if hasattr(resources, "async_create_item"):
+            try:
+                await resources.async_create_item({
+                    "res_type": "module",
+                    "url": url,
+                })
+                _LOGGER.info("Lovelace 资源已注册: %s", url)
+            except Exception as err:
+                _LOGGER.warning("注册资源失败 %s: %s", url, err)
+        else:
+            _LOGGER.warning("Lovelace 资源不支持自动注册，请手动添加：%s", url)
+
+    except Exception as err:
+        _LOGGER.warning("注册 Lovelace 资源失败: %s", err)
 
 
 class TailgddMqttClient:

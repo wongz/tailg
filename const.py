@@ -25,13 +25,13 @@ CONF_UID    = "uid"
 CONF_TOKEN  = "token"
 CONF_COOKIE = "cookie"
 
-DEFAULT_SCAN_INTERVAL = 60
+DEFAULT_SCAN_INTERVAL = 300
 
 # ==================== MQTT 主题模板 ====================
 TOPIC_STATUS_TPL = "S_APP/STATUS/{imei}"
 TOPIC_OTA_TPL    = "S_APP/OTA/{imei}"
 TOPIC_CMD_TPL    = "APP_S/CMD/{imei}"
-CLIENT_ID_TPL    = "app_{imei}_{user_id}_android_733."
+CLIENT_ID_TPL    = "app_{imei}_{user_id}_android_733"
 
 # ==================== 控制指令映射 ====================
 CMD_MAP = {
@@ -49,6 +49,15 @@ SOURCE_HTTP = "http"
 
 # ==================== 传感器（仅保留慢变化项，电源/防盗在 switch 里） ====================
 SENSOR_TYPES = [
+    {
+        "key":        "batteryChargeStatus",
+        "name":       "充电状态",
+        "entity_key": "charging",
+        "unit":       None,
+        "icon":       "mdi:battery-charging",
+        "value_map":  {0: "未充电", 4: "充电中"},
+        "source":     SOURCE_HTTP,
+    },
     {
         "key":          "electricQuantity",
         "name":         "电量",
@@ -98,7 +107,7 @@ SENSOR_TYPES = [
         "entity_key": "mute",
         "unit":       None,
         "icon":       "mdi:volume-off",
-        "value_map":  {0: "正常", 1: "已静音"},
+        "value_map":  {0: "禁用", 1: "启用"},
         "source":     SOURCE_MQTT,
     },
     {
@@ -109,6 +118,30 @@ SENSOR_TYPES = [
         "icon":       "mdi:car",
         "value_map":  {0: "未知", 1: "静止", 2: "设防", 3: "行驶", 4: "报警", 5: "充电"},
         "source":     SOURCE_MQTT,
+    },
+    {
+        "key":        "regeo",
+        "name":       "位置",
+        "entity_key": "location",
+        "unit":       None,
+        "icon":       "mdi:map-marker",
+        "source":     SOURCE_HTTP,
+    },
+    {
+        "key":        "longitude",
+        "name":       "经度",
+        "entity_key": "longitude",
+        "unit":       "°",
+        "icon":       "mdi:longitude",
+        "source":     SOURCE_HTTP,
+    },
+    {
+        "key":        "latitude",
+        "name":       "纬度",
+        "entity_key": "latitude",
+        "unit":       "°",
+        "icon":       "mdi:latitude",
+        "source":     SOURCE_HTTP,
     },
 ]
 
@@ -150,6 +183,9 @@ def device_suffix(frame: str) -> str:
 # 带 domain 的完整 entity_id 模板
 ENTITY_ID_TPL = "{domain}.tailg_{suffix}_{key}"
 
+# ==================== 设备追踪器（经纬度） ====================
+# device_tracker 的 entity_id: tailg_{suffix}_location
+TRACKER_ENTITY_ID_TPL = "device_tracker.tailg_{suffix}_location"
 
 # ==================== 设备信息构造 ====================
 def build_device_info(info: dict):
