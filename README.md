@@ -1,8 +1,8 @@
 Tailgdd 车辆集成 for Home Assistant
 
-https://img.shields.io/badge/HACS-Custom-orange.svg
-https://img.shields.io/badge/Home%20Assistant-2022.8%2B-blue.svg
-https://img.shields.io/badge/license-MIT-green.svg
+![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)
+![HA Version](https://img.shields.io/badge/Home%20Assistant-2022.8%2B-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 台铃电动车的 Home Assistant 集成 —— 轨迹回放、实时定位、远程控制、车辆状态一网打尽。
 
