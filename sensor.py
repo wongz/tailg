@@ -104,8 +104,6 @@ class HttpSensor(CoordinatorEntity, SensorEntity):
             return None
         if self._key == "gpsReportTime":
             return str(raw)[:19].replace("T", " ")
-        if self._key == "online":
-            return "在线" if raw else "离线"
         return self._value_map.get(raw, raw)
 
     @property

@@ -38,7 +38,7 @@ class VehicleButton(ButtonEntity):
 
         self._attr_name = cfg["name"]
         self._attr_icon = cfg.get("icon")
-        self._attr_unique_id = f"tailgdd_{suffix}_btn_{cfg['key']}"
+        self._attr_unique_id = f"tailg_{suffix}_btn_{cfg['key']}"
         self._attr_device_info = build_device_info(info)
 
     async def async_press(self):

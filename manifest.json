@@ -1,9 +1,9 @@
 {
-  "domain": "tailgdd",
-  "name": "Tailgdd Vehicle",
+  "domain": "tailg",
+  "name": "TAILG",
   "version": "1.0.0",
-  "documentation": "https://github.com/wongz/tailgdd",
-  "issue_tracker": "https://github.com/wongz/tailgdd/issues",
+  "documentation": "https://github.com/wongz/tailg",
+  "issue_tracker": "https://github.com/wongz/tailg/issues",
   "codeowners": ["@wongz"],
   "dependencies": [],
   "requirements": ["paho-mqtt>=1.6.1"],

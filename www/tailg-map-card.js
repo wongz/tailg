@@ -1,5 +1,5 @@
 /**
- * Tailgdd 地图卡片 —— iframe 隔离方案
+ * TAILG 地图卡片 —— iframe 隔离方案
  */
 
 /* ============================================================
@@ -343,7 +343,7 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
       }
 
       window.addEventListener('message', function(e) {
-        if (!e.data || e.data.type !== 'tailgdd-highlight') return;
+        if (!e.data || e.data.type !== 'tailg-highlight') return;
         var idx = Number(e.data.index);
         if (!isNaN(idx)) highlightTrack(idx);
       });
@@ -494,7 +494,7 @@ const LitElement = Object.getPrototypeOf(customElements.get("ha-panel-lovelace")
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
-class TailgddMapCard extends LitElement {
+class TailgMapCard extends LitElement {
     static get properties() {
         return {
             hass:   { type: Object },
@@ -565,7 +565,7 @@ class TailgddMapCard extends LitElement {
             );
             if (m) tracker = m;
         }
-        return { type: "custom:tailgdd-map-card", entity: tracker };
+        return { type: "custom:tailg-map-card", entity: tracker };
     }
 
     getCardSize() { return 5; }
@@ -613,12 +613,12 @@ class TailgddMapCard extends LitElement {
 
     _openHistory() {
         if (this._opening) return;
-        const existing = document.querySelector('tailgdd-history-dialog');
+        const existing = document.querySelector('tailg-history-dialog');
         if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
 
         this._opening = true;
         try {
-            const dialog = document.createElement("tailgdd-history-dialog");
+            const dialog = document.createElement("tailg-history-dialog");
             dialog.hass = this.hass;
             dialog.addEventListener("dialog-closed", () => {
                 if (dialog.parentNode) dialog.parentNode.removeChild(dialog);
@@ -626,7 +626,7 @@ class TailgddMapCard extends LitElement {
             });
             document.body.appendChild(dialog);
         } catch (err) {
-            console.error("[tailgdd-map] 打开历史轨迹失败", err);
+            console.error("[tailg-map] 打开历史轨迹失败", err);
             this._opening = false;
         }
     }
@@ -660,12 +660,12 @@ class TailgddMapCard extends LitElement {
     }
 }
 
-customElements.define("tailgdd-map-card", TailgddMapCard);
+customElements.define("tailg-map-card", TailgMapCard);
 
 /* ============================================================
  * 历史轨迹对话框
  * ============================================================ */
-class TailgddHistoryDialog extends LitElement {
+class TailgHistoryDialog extends LitElement {
     static get properties() {
         return {
             hass: { type: Object },
@@ -897,9 +897,9 @@ class TailgddHistoryDialog extends LitElement {
     connectedCallback() {
         super.connectedCallback();
         try {
-            history.pushState({ tailgddDialog: true }, '');
+            history.pushState({ tailgDialog: true }, '');
             this._historyPushed = true;
-        } catch (e) { console.warn('[tailgdd-history] pushState 失败', e); }
+        } catch (e) { console.warn('[tailg-history] pushState 失败', e); }
 
         this._onPopState = () => {
             if (this._historyPushed) {
@@ -932,14 +932,14 @@ class TailgddHistoryDialog extends LitElement {
         this._loading = true;
         try {
             const resp = await this.hass.callApi(
-                "GET", `tailgdd/month?month=${encodeURIComponent(month)}`
+                "GET", `tailg/month?month=${encodeURIComponent(month)}`
             );
             this._days = this._groupDays(resp.data || []);
             this.requestUpdate();
             await this.updateComplete;
             if (this._days.length > 0) await this._selectDay(this._days[0].date);
         } catch (err) {
-            console.error("[tailgdd-history] 加载月份失败", err);
+            console.error("[tailg-history] 加载月份失败", err);
         } finally { this._loading = false; }
     }
 
@@ -1027,11 +1027,11 @@ class TailgddHistoryDialog extends LitElement {
             let points = [];
             try {
                 const resp = await this.hass.callApi(
-                    "GET", `tailgdd/day?id=${encodeURIComponent(t.id)}`
+                    "GET", `tailg/day?id=${encodeURIComponent(t.id)}`
                 );
                 points = resp.data || [];
             } catch (err) {
-                console.warn("[tailgdd-history] 拉取轨迹失败", t.id, err);
+                console.warn("[tailg-history] 拉取轨迹失败", t.id, err);
                 continue;
             }
             if (points.length === 0) continue;
@@ -1052,7 +1052,7 @@ class TailgddHistoryDialog extends LitElement {
         const iframe = this.shadowRoot.querySelector(".map-wrap iframe");
         if (iframe && iframe.contentWindow) {
             iframe.contentWindow.postMessage(
-                { type: 'tailgdd-highlight', index: next }, '*'
+                { type: 'tailg-highlight', index: next }, '*'
             );
         }
     }
@@ -1161,12 +1161,12 @@ class TailgddHistoryDialog extends LitElement {
     }
 }
 
-customElements.define("tailgdd-history-dialog", TailgddHistoryDialog);
+customElements.define("tailg-history-dialog", TailgHistoryDialog);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-    type: "tailgdd-map-card",
+    type: "tailg-map-card",
     name: "台铃地图卡片",
-    description: "显示车辆最新位置（读 device_tracker），点击打开历史轨迹",
+    description: "显示车辆最新位置，点击打开历史轨迹",
     preview: false,
 });

@@ -1,4 +1,4 @@
-"""Tailgdd 车辆集成入口 —— 自建 MQTT 客户端连接车厂 broker。"""
+"""台铃车辆集成入口 —— 自建 MQTT 客户端连接车厂 broker。"""
 from __future__ import annotations
 
 import asyncio
@@ -26,7 +26,7 @@ except ImportError:
 
 from .api import async_fetch_car_status
 from .const import (
-    DOMAIN, CONF_FRAME, CONF_UID, CONF_TOKEN, CONF_COOKIE,
+    DOMAIN, CONF_TOKEN, CONF_AMAP_KEY,
     TOPIC_STATUS_TPL, TOPIC_CMD_TPL, CLIENT_ID_TPL, DEFAULT_SCAN_INTERVAL,
     device_suffix,
 )
@@ -37,9 +37,18 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.BUTTON,
     Platform.SWITCH,
-    Platform.DEVICE_TRACKER,   # ★ 新增
+    Platform.DEVICE_TRACKER,
 ]
 
+def _cfg(entry: ConfigEntry, key: str, default=""):
+    """优先从 options 读，回退到 data（HA 标准做法）。"""
+    if key in entry.options:
+        return entry.options[key]
+    return entry.data.get(key, default)
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """选项变更时重新加载集成。"""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 async def async_setup(hass: HomeAssistant, config) -> bool:
     """初始化：部署卡片 JS + 注册 Lovelace 资源 + 注册 HTTP API。"""
@@ -50,8 +59,8 @@ async def async_setup(hass: HomeAssistant, config) -> bool:
         dst_dir.mkdir(parents=True, exist_ok=True)
 
         card_files = [
-            "tailgdd-card.js",
-            "tailgdd-map-card.js",
+            "tailg-card.js",
+            "tailg-map-card.js",
         ]
 
         for fname in card_files:
@@ -59,7 +68,7 @@ async def async_setup(hass: HomeAssistant, config) -> bool:
             dst = dst_dir / fname
             if src.exists():
                 shutil.copy2(src, dst)
-                _LOGGER.info("Tailgdd 卡片已部署: %s", dst)
+                _LOGGER.info("台铃卡片已部署: %s", dst)
             else:
                 _LOGGER.warning("未找到卡片 JS: %s", src)
 
@@ -134,7 +143,7 @@ async def _register_lovelace_resource(hass: HomeAssistant, url: str) -> None:
         _LOGGER.warning("注册 Lovelace 资源失败: %s", err)
 
 
-class TailgddMqttClient:
+class TailgMqttClient:
     """独立 MQTT 客户端，直连车厂 broker。"""
 
     def __init__(self, hass: HomeAssistant, info: dict):
@@ -257,18 +266,17 @@ class TailgddMqttClient:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """设置 Tailgdd 集成。"""
-    frame  = entry.data.get(CONF_FRAME, "")
-    uid    = entry.data.get(CONF_UID, "")
-    token  = entry.data.get(CONF_TOKEN, "")
-    cookie = entry.data.get(CONF_COOKIE, "")
+    """设置TAILG集成。"""
+    token    = _cfg(entry, CONF_TOKEN, "")
+    #cookie   = _cfg(entry, CONF_COOKIE, "")
+    amap_key = _cfg(entry, CONF_AMAP_KEY, "")
 
     if not token:
         _LOGGER.error("缺少 authorization token")
         return False
 
     # ---------- 1. 获取 MQTT 凭证 + 车辆名称 ----------
-    car_info = await async_fetch_car_status(token, cookie, uid, frame)
+    car_info = await async_fetch_car_status(token)
     if not car_info:
         _LOGGER.error("carStatus 接口返回失败")
         return False
@@ -284,36 +292,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                       imei, mq_host, mq_port)
         return False
 
-    # ★ 从接口取车名（优先 carNickName，其次 carName）
     car_name = (
         car_info.get("carNickName")
         or car_info.get("carName")
-        or f"Tailgdd 车辆 {device_suffix(frame)}"
+        or f"台铃 {device_suffix(frame)}"
     )
-
+    
+    frame = car_info.get("frame")
+    uid = str(car_info.get("userId", "0"))
+    
     info = {
-        "imei":        imei,
-        "mq_host":     mq_host,
-        "mq_port":     int(mq_port),
+        "imei":                imei,
+        "mq_host":          mq_host,
+        "mq_port":          int(mq_port),
         "mq_username": mq_user,
-        "mq_password": mq_pass,
-        "user_id":     str(car_info.get("userId", "0")),
-        "frame":       frame,
-        "suffix":      device_suffix(frame),
-        "car_name":    car_name,                      # ★ HA 设备名
-        "model":       car_info.get("carType") or "",  # 车型号（选填）
+        "mq_password":  mq_pass,
+        "user_id":         uid,
+        "frame":           frame,
+        "suffix":            device_suffix(frame),
+        "car_id":           car_info.get("carId"),
+        "car_name":     car_name,
+        "car_type":       car_info.get("carType"),
+        "coding":          car_info.get("coding"),
     }
     creds = {
-        "token":  token,
-        "cookie": cookie,
-        "uid":    uid,
-        "frame":  frame,
+        "token":    token,
+       # "cookie":   cookie,
+        "uid":      uid,
+        "frame":    frame,
+        "amap_key": amap_key,
     }
 
     _LOGGER.info("车辆信息: imei=%s name=%s", imei, car_name)
 
     # ---------- 2. 建 MQTT 客户端 ----------
-    client = TailgddMqttClient(hass, info)
+    client = TailgMqttClient(hass, info)
     await client.async_connect()
 
     # 等待首条状态（最多 8 秒）
@@ -335,15 +348,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     # ---------- 4. HTTP 协调器 ----------
-    from .coordinator import TailgddHttpCoordinator
-    coordinator = TailgddHttpCoordinator(hass, entry, interval=DEFAULT_SCAN_INTERVAL, creds=creds)
+    from .coordinator import TailgHttpCoordinator
+    coordinator = TailgHttpCoordinator(hass, entry, interval=DEFAULT_SCAN_INTERVAL, creds=creds)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id]["coordinator"] = coordinator
 
-    _LOGGER.info("Tailgdd 集成已启动: imei=%s", imei)
+    _LOGGER.info("TAILG 集成已启动: imei=%s", imei)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # ★ 监听 options 变更，自动重载集成
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
 

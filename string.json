@@ -5,10 +5,9 @@
         "title": "Tailgdd Vehicle",
         "description": "填写抓包获取的授权信息",
         "data": {
-          "frame": "车辆 frame（序列号）",
-          "uid": "用户 ID",
           "token": "授权令牌 authorization",
-          "cookie": "Cookie（可选）"
+          "cookie": "Cookie（可选）",
+          "amap_key": "高德 Web 服务 Key（可选，用于逆地理）"
         }
       }
     },
@@ -24,10 +23,9 @@
       "init": {
         "title": "更新授权信息",
         "data": {
-          "frame": "车辆 frame",
-          "uid": "用户 ID",
           "token": "授权令牌",
-          "cookie": "Cookie"
+          "cookie": "Cookie",
+          "amap_key": "高德 Web 服务 Key"
         }
       }
     }

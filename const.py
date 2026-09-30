@@ -1,8 +1,8 @@
-"""Tailgdd 集成常量定义。"""
+"""台铃集成常量定义"""
 
 # ==================== 集成标识 ====================
-DOMAIN  = "tailgdd"
-NAME    = "Tailgdd Vehicle"
+DOMAIN  = "tailg"
+NAME    = "TAILG"
 VERSION = "1.0.0"
 
 # ==================== 接口配置 ====================
@@ -20,10 +20,9 @@ API_PAYLOAD = {
 }
 
 # ==================== 配置项 ====================
-CONF_FRAME  = "frame"
-CONF_UID    = "uid"
 CONF_TOKEN  = "token"
 CONF_COOKIE = "cookie"
+CONF_AMAP_KEY = "amap_key"
 
 DEFAULT_SCAN_INTERVAL = 180
 
@@ -41,6 +40,8 @@ CMD_MAP = {
     "probe":  "searchDeviceInfo",
     "start":  "start",
     "stop":   "stop",
+    "mute": "mute",
+    "unmute": "unmute",
 }
 
 # ==================== 数据源 ====================
@@ -98,17 +99,8 @@ SENSOR_TYPES = [
         "entity_key": "online",
         "unit":       None,
         "icon":       "mdi:access-point",
-        "value_map":  {True: "在线", False: "离线", 1: "在线", 0: "离线"},
+        "value_map":  {True: "在线", False: "离线"},
         "source":     SOURCE_HTTP,
-    },
-    {
-        "key":        "muteStatus",
-        "name":       "静音",
-        "entity_key": "mute",
-        "unit":       None,
-        "icon":       "mdi:volume-off",
-        "value_map":  {0: "禁用", 1: "启用"},
-        "source":     SOURCE_MQTT,
     },
     {
         "key":        "carStatus",
@@ -119,12 +111,14 @@ SENSOR_TYPES = [
         "value_map":  {
             0: "0",
             1: "脚撑收起",
-            2: "2",
+            2: "更新状态",
             3: "3",
             4: "通电",
             5: "断电",
             6: "手动设防",
-            7: "手动解防",
+            7: "手动撤防",
+            8: "防盗静音",
+            9: "防盗声音",
             32: "32",
             33: "33",
             255: "255"
@@ -159,10 +153,16 @@ SENSOR_TYPES = [
 
 # ==================== 按钮 ====================
 BUTTON_TYPES = [
-    {"key": "search", "name": "寻车", "entity_key": "search", "icon": "mdi:bullhorn", "command": "search"},
+    {
+        "key": "search",
+        "name": "寻车",
+        "entity_key": "search",
+        "icon": "mdi:bullhorn",
+        "command": "search"
+    },
 ]
 
-# ==================== 开关（电源、防盗） ====================
+# ==================== 开关（电源、防盗、防盗报警音） ====================
 SWITCH_TYPES = [
     {
         "key":        "ACC",
@@ -181,6 +181,15 @@ SWITCH_TYPES = [
         "icon_off":   "mdi:shield-off",
         "cmd_on":     "lock",
         "cmd_off":    "unlock",
+    },
+    {
+        "key":        "muteStatus",
+        "name":       "防盗声",
+        "entity_key": "alarm",
+        "icon_on":    "mdi:volume-high",
+        "icon_off":   "mdi:volume-off",
+        "cmd_on":     "unmute",
+        "cmd_off":    "mute",
     },
 ]
 
@@ -205,12 +214,12 @@ def build_device_info(info: dict):
     from homeassistant.helpers.entity import DeviceInfo
 
     suffix = info.get("suffix", "0000")
-    name = info.get("car_name") or f"Tailgdd 车辆 {suffix}"
+    name = info.get("car_name") or f"台铃{suffix}"
 
     return DeviceInfo(
-        identifiers={(DOMAIN, f"tailgdd_{suffix}")},
+        identifiers={(DOMAIN, f"tailg_{suffix}")},
         name=name,
-        manufacturer="Tailgdd",
-        model=info.get("model") or "电动车",
-        sw_version=VERSION,
+        manufacturer="TAILG",
+        model=info.get("car_type") or "电动车",
+        #sw_version=info.get("coding"),
     )

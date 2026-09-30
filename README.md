@@ -1,4 +1,4 @@
-# Tailgdd 车辆集成 for Home Assistant
+# TAILG 车辆集成 for Home Assistant
 
 ![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)
 ![HA Version](https://img.shields.io/badge/Home%20Assistant-2022.8%2B-blue.svg)
@@ -61,21 +61,21 @@
 2. 右上角 ⋮ → **自定义存储库**
 3. 添加 URL：
 
-       https://github.com/wongz/tailgdd
+       https://github.com/wongz/tailg
 
 4. 类别选 **Integration** → 添加
-5. 搜索 **Tailgdd Vehicle** → 安装
+5. 搜索 **TAILG** → 安装
 6. **重启 Home Assistant**
 
 ### 方式二：手动安装
 
-1. 下载最新 [Release](https://github.com/wongz/tailgdd/releases)
-2. 解压到 `custom_components/tailgdd/`
+1. 下载最新 [Release](https://github.com/wongz/tailg/releases)
+2. 解压到 `custom_components/tailg/`
 3. 确认目录结构：
 
        config/
        └── custom_components/
-           └── tailgdd/
+           └── tailg/
                ├── __init__.py
                ├── api.py
                ├── button.py
@@ -88,8 +88,8 @@
                ├── sensor.py
                ├── switch.py
                └── www/
-                   ├── tailgdd-card.js
-                   └── tailgdd-map-card.js
+                   ├── tailg-card.js
+                   └── tailg-map-card.js
 
 4. **重启 Home Assistant**
 
@@ -103,16 +103,14 @@
 
 | 字段 | 说明 | 示例 |
 |------|------|------|
-| `frame` | 车辆序列号（车架号） | `12345678910` |
-| `uid` | 用户 ID | `12345678` |
 | `token` | 请求头 `authorization` 的完整值 | `c3fwod5K...` |
 | `cookie` | 请求头 `Cookie` 的值 | `HWWAFSESTIME=...; HWWAFSESID=...` |
 
 ### 2. 添加集成
 
 1. 打开 **设置 → 设备与服务 → 添加集成**
-2. 搜索 **Tailgdd Vehicle**
-3. 填入上一步提取的四个字段
+2. 搜索 **TAILG**
+3. 填入上一步提取的两个字段
 4. 提交
 
 ### 3. 部署卡片
@@ -124,8 +122,8 @@
 
    | URL | 类型 |
    |-----|------|
-   | `/local/tailgdd-card.js` | JavaScript 模块 |
-   | `/local/tailgdd-map-card.js` | JavaScript 模块 |
+   | `/local/tailg-card.js` | JavaScript 模块 |
+   | `/local/tailg-map-card.js` | JavaScript 模块 |
 
 注意 **强制刷新浏览器**（`Ctrl + Shift + R`）
 
@@ -135,7 +133,7 @@
 
 ### 车辆信息卡片
 
-    type: custom:tailgdd-card
+    type: custom:tailg-card
     name: 台铃
     entities:
       online:   sensor.tailg_9179_online
@@ -151,7 +149,7 @@
 
 ### 地图卡片
 
-    type: custom:tailgdd-map-card
+    type: custom:tailg-map-card
     entity: device_tracker.tailg_9179_location
 
 - **默认视图**：地图显示车辆最新位置
@@ -251,11 +249,11 @@
 
 ### 集成加载失败
 
-**症状**：集成列表里找不到 Tailgdd。
+**症状**：集成列表里找不到 TAILG。
 
 **排查**：
-1. 检查目录结构是否正确（`manifest.json` 和 `__init__.py` 必须在 `custom_components/tailgdd/` 下）
-2. 检查日志：设置 → 系统 → 日志，搜索 `tailgdd`
+1. 检查目录结构是否正确（`manifest.json` 和 `__init__.py` 必须在 `custom_components/tailg/` 下）
+2. 检查日志：设置 → 系统 → 日志，搜索 `tailg`
 3. 确认已 **重启 Home Assistant**（不是 reload）
 
 ### 传感器显示"未知"
@@ -276,7 +274,7 @@
 **修复**：已用 **iframe 隔离** 方案解决。如果仍出现问题，尝试：
 1. **强刷浏览器**（`Ctrl + Shift + R`）
 2. 检查 Console 是否有 `Leaflet 加载失败`
-3. 若 `unpkg.com` 被墙，把 `tailgdd-map-card.js` 里 `LEAFLET_CSS` 和 `LEAFLET_JS` 换成国内 CDN
+3. 若 `unpkg.com` 被墙，把 `tailg-map-card.js` 里 `LEAFLET_CSS` 和 `LEAFLET_JS` 换成国内 CDN
 
 ### 控制按钮无反应
 
@@ -284,7 +282,7 @@
 
 **排查**：
 1. 看日志里是否有 `指令已发布: APP_S/CMD/...`
-2. 打开官方 APP，确认登录状态有效
+2. 打开官方 APP，确认 **没有被同时登录**（HA 和 APP 会互踢）
 3. 确认车辆 **ACC 状态**（有些指令需要在特定状态下才能执行）
 
 ### 历史轨迹打不开
@@ -294,7 +292,7 @@
 **排查**：
 1. **强刷浏览器**
 2. 检查 HA 是否允许 `history.pushState`（某些反向代理会拦截）
-3. 查看 Console 是否有 `[tailgdd-map] 打开历史轨迹失败`
+3. 查看 Console 是否有 `[tailg-map] 打开历史轨迹失败`
 
 ---
 
@@ -318,15 +316,16 @@ MQTT 通信：
 ## 🚨 注意事项
 
 1. **仅限个人使用**：本项目仅用于学习交流，请勿用于商业用途
-2. **Token 时效**：tailgdd 的 `authorization` 有时效，过期后需重新抓包更新
+2. **Token 时效**：TAILG 的 `authorization` 有时效，过期后需重新抓包更新
 3. **车辆离线**：若车辆长时间离线（如电池耗尽、地库无信号），所有控制指令均无效
-4. **坐标系**：tailgdd 使用 GCJ-02（高德体系），集成内部自动转换
+4. **坐标系**：tailg 使用 GCJ-02（高德体系），集成内部自动转换
+5. **APP 互踢**：HA 与官方 APP 同时在线时，MQTT 连接会互踢。建议不同时登录
 
 ---
 
 ## 📁 项目结构
 
-    custom_components/tailgdd/
+    custom_components/tailg/
     ├── __init__.py          # 集成入口
     ├── manifest.json        # 元数据
     ├── const.py             # 常量定义
@@ -339,8 +338,8 @@ MQTT 通信：
     ├── switch.py            # 开关实体
     ├── device_tracker.py    # 位置追踪器
     └── www/
-        ├── tailgdd-card.js      # 车辆信息卡片
-        └── tailgdd-map-card.js  # 地图 + 历史轨迹卡片
+        ├── tailg-card.js      # 车辆信息卡片
+        └── tailg-map-card.js  # 地图 + 历史轨迹卡片
 
 ---
 
@@ -350,10 +349,10 @@ MQTT 通信：
 
 ### 开发环境
 
-    git clone https://github.com/wongz/tailgdd.git
-    cd tailgdd
-    # 把 custom_components/tailgdd/ 软链到 HA 的 config 目录
-    ln -s $(pwd)/custom_components/tailgdd ~/.homeassistant/custom_components/tailgdd
+    git clone https://github.com/wongz/tailg.git
+    cd tailg
+    # 把 custom_components/tailg/ 软链到 HA 的 config 目录
+    ln -s $(pwd)/custom_components/tailg ~/.homeassistant/custom_components/tailg
 
 ### 代码风格
 

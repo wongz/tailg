@@ -1,4 +1,4 @@
-"""Tailgdd HTTP API —— 供前端卡片调用，代理车厂接口。"""
+"""TAILG HTTP API —— 供前端卡片调用，代理车厂接口。"""
 from __future__ import annotations
 
 import logging
@@ -64,10 +64,10 @@ def _get_creds(hass: HomeAssistant) -> dict | None:
     return None
 
 
-class TailgddMonthView(HomeAssistantView):
+class TailgMonthView(HomeAssistantView):
     """返回某月所有日期的行程摘要。"""
-    url = "/api/tailgdd/month"
-    name = "api:tailgdd:month"
+    url = "/api/tailg/month"
+    name = "api:tailg:month"
     requires_auth = True
 
     async def get(self, request):
@@ -91,10 +91,10 @@ class TailgddMonthView(HomeAssistantView):
         return self.json({"code": 0, "data": data})
 
 
-class TailgddDayView(HomeAssistantView):
+class TailgDayView(HomeAssistantView):
     """返回某天所有行程的轨迹点。"""
-    url = "/api/tailgdd/day"
-    name = "api:tailgdd:day"
+    url = "/api/tailg/day"
+    name = "api:tailg:day"
     requires_auth = True
 
     async def get(self, request):
@@ -118,32 +118,8 @@ class TailgddDayView(HomeAssistantView):
         return self.json({"code": 0, "data": data})
 
 
-class TailgddCarStatusView(HomeAssistantView):
-    """返回车辆当前状态（含经纬度）。"""
-    url = "/api/tailgdd/carstatus"
-    name = "api:tailgdd:carstatus"
-    requires_auth = True
-
-    async def get(self, request):
-        creds = _get_creds(request.app["hass"])
-        if not creds:
-            return self.json_message("no credentials", status_code=401)
-
-        data = await _post(
-            request.app["hass"],
-            creds["token"], creds["cookie"], creds["uid"], creds["frame"],
-            "/v1/api/app/centralControl/carStatus",
-        )
-        if data is None:
-            return self.json_message("fetch failed", status_code=502)
-
-        # ★ 不再做逆地理，直接返回原数据
-        return self.json({"code": 0, "data": data})
-
-
 async def async_register_views(hass: HomeAssistant) -> None:
     """注册 HTTP 视图。"""
-    hass.http.register_view(TailgddMonthView)
-    hass.http.register_view(TailgddDayView)
-    #hass.http.register_view(TailgddCarStatusView)
-    _LOGGER.info("Tailgdd HTTP API 已注册")
+    hass.http.register_view(TailgMonthView)
+    hass.http.register_view(TailgDayView)
+    _LOGGER.info("TAILG HTTP API 已注册")

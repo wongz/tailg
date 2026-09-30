@@ -1,5 +1,5 @@
 /**
- * Tailgdd 车辆信息卡片
+ * TAILG 车辆信息卡片
  */
 
 const LitElement = Object.getPrototypeOf(
@@ -8,7 +8,7 @@ const LitElement = Object.getPrototypeOf(
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
-class TailgddCard extends LitElement {
+class TailgCard extends LitElement {
     static get properties() {
         return {
             hass:   { type: Object },
@@ -192,7 +192,7 @@ class TailgddCard extends LitElement {
         const e = (domain, key) => s ? `${domain}.tailg_${s}_${key}` : "";
 
         return {
-            type: "custom:tailgdd-card",
+            type: "custom:tailg-card",
             entities: {
                 online:   e("sensor", "online"),
                 battery:  e("sensor", "battery"),
@@ -266,6 +266,20 @@ class TailgddCard extends LitElement {
         if (pct < 50) return "low";
         return "";
     }
+    
+    _showHistory(entityId) {
+        if (!entityId || !this.hass.states[entityId]) return;
+        this.dispatchEvent(new CustomEvent('show-dialog', {
+            detail: {
+                dialogTag: 'ha-more-info-dialog',
+                dialogImport: () => Promise.resolve(),
+                dialogParams: { entityId: entityId },
+                addHistory: true,
+            },
+            bubbles: true,
+            composed: true,
+        }));
+    }
 
     // ==================== 渲染 ====================
     render() {
@@ -293,7 +307,8 @@ class TailgddCard extends LitElement {
                     <div class="header-icon">
                         <ha-icon icon="mdi:motorbike-electric"></ha-icon>
                     </div>
-                    <div class="header-title">
+                    <div class="header-title"
+                         @click=${() => this._showHistory(e.online)}>
                         <div class="header-name">${name}</div>
                         <div class="header-sub">
                             <span class="status-dot ${online ? 'online' : ''}"></span>
@@ -301,21 +316,24 @@ class TailgddCard extends LitElement {
                         </div>
                     </div>
 
-                    <div class="battery-badge ${batteryClass}">
+                    <div class="battery-badge ${batteryClass}"
+                         @click=${() => this._showHistory(e.battery)}>
                         <ha-icon icon="${batteryIcon}"></ha-icon>
                         <span class="pct">${battery != null ? battery + "%" : "--"}</span>
                     </div>
                 </div>
 
                 <div class="metrics">
-                    <div class="metric">
+                    <div class="metric"
+                         @click=${() => this._showHistory(e.range)}>
                         <div class="metric-label">续航</div>
                         <div class="metric-value">
                             ${range != null ? range : "--"}<small>km</small>
                         </div>
                     </div>
 
-                    <div class="metric">
+                    <div class="metric"
+                         @click=${() => this._showHistory(e.voltage)}>
                         <div class="metric-label">电压</div>
                         <div class="metric-value">
                             ${voltage != null ? voltage : "--"}<small>V</small>
@@ -353,13 +371,13 @@ class TailgddCard extends LitElement {
     }
 }
 
-customElements.define("tailgdd-card", TailgddCard);
+customElements.define("tailg-card", TailgCard);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-    type:        "tailgdd-card",
+    type:        "tailg-card",
     name:        "台铃卡片",
     description: "显示电量、续航、电压，并提供电源/防盗/寻车控制",
     preview:     false,
-    documentationURL: "https://github.com/wongz/tailgdd",
+    documentationURL: "https://github.com/wongz/tailg",
 });

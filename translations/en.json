@@ -2,13 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Tailgdd Vehicle",
+        "title": "Tailg Vehicle",
         "description": "Enter the authorization info from the packet capture",
         "data": {
-          "frame": "Vehicle Frame",
-          "uid": "User ID",
-          "token": "Authorization Token",
-          "cookie": "Cookie (optional)"
+          "token": "Authorization",
+          "cookie": "Cookie (optional)",
+          "amap_key": "AMap Key (optional)"
         }
       }
     },
@@ -24,10 +23,9 @@
       "init": {
         "title": "Update authorization",
         "data": {
-          "frame": "Vehicle Frame",
-          "uid": "User ID",
-          "token": "Authorization Token",
-          "cookie": "Cookie"
+          "token": "Authorization",
+          "cookie": "Cookie",
+          "amap_key": "AMap Key"
         }
       }
     }
