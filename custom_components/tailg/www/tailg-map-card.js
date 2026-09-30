@@ -429,6 +429,8 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
 
         if (allBounds.length > 0) {
           map.fitBounds(L.latLngBounds(allBounds), { padding: [40, 40], maxZoom: 16 });
+        } else if (curPos) {
+          map.setView([curPos.lat, curPos.lng], 16);
         }
 
         document.querySelectorAll('.basemap-switch button').forEach(function(btn) {
@@ -925,7 +927,23 @@ class TailgHistoryDialog extends LitElement {
     async firstUpdated() {
         this._months = getRecentMonths(10);
         this._month = this._months[0];
+
+        // ① 先只展示当前车辆位置
+        this._focusCurrent();
+
+        // ② 加载月份数据（内部会自动选中最近一天 / 无行程时清空）
         await this._loadMonth(this._month);
+    }
+
+    /**
+     * 只展示当前车辆位置（无轨迹）
+     */
+    _focusCurrent() {
+        const cur = this._getCurrentPosition();
+        this._currentTracks = [];
+        this._iframeSrcdoc = buildHistoryIframeHtml(
+            this._baseMode, [], cur
+        );
     }
 
     async _loadMonth(month) {
@@ -935,9 +953,18 @@ class TailgHistoryDialog extends LitElement {
                 "GET", `tailg/month?month=${encodeURIComponent(month)}`
             );
             this._days = this._groupDays(resp.data || []);
+            this._activeTrip = -1;
             this.requestUpdate();
             await this.updateComplete;
-            if (this._days.length > 0) await this._selectDay(this._days[0].date);
+
+            if (this._days.length > 0) {
+                // 自动打开该月最近一天的行程
+                await this._selectDay(this._days[0].date);
+            } else {
+                // 无行程月份：清空轨迹，只保留当前车辆位置
+                this._focusCurrent();
+                this.requestUpdate();
+            }
         } catch (err) {
             console.error("[tailg-history] 加载月份失败", err);
         } finally { this._loading = false; }
@@ -989,14 +1016,18 @@ class TailgHistoryDialog extends LitElement {
     }
 
     async _selectDay(date) {
+        const day = this._days.find(d => d.date === date);
+        if (!day) {
+            this._activeTrip = -1;
+            this._focusCurrent();
+            return;
+        }
         this._activeTrip = -1;
         const groups = this.shadowRoot.querySelectorAll(".day-group");
         groups.forEach(g => {
             if (g.dataset.date === date) g.classList.add("selected", "expanded");
             else g.classList.remove("selected", "expanded");
         });
-        const day = this._days.find(d => d.date === date);
-        if (!day) return;
         await this._loadDayTracks(day);
     }
 
