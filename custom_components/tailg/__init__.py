@@ -317,7 +317,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
     creds = {
         "token":    token,
-       # "cookie":   cookie,
+        "cookie":   None,
         "uid":      uid,
         "frame":    frame,
         "amap_key": amap_key,
