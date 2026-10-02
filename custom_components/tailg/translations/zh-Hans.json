@@ -25,7 +25,7 @@
         "data": {
           "token": "授权令牌",
           "cookie": "Cookie",
-          "amap_key": "高德 Key"
+          "amap_key": "高德 Key（空格可清空）"
         }
       }
     }

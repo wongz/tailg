@@ -11,68 +11,66 @@ const PALETTE = [
 ];
 const WEEKDAYS = ['周日','周一','周二','周三','周四','周五','周六'];
 
-function getRecentMonths(n = 10) {
-    const out = [];
-    const now = new Date();
+const getRecentMonths = (n = 10) => {
+    const out = [], now = new Date();
     let y = now.getFullYear(), m = now.getMonth();
     for (let i = 0; i < n; i++) {
         out.push(`${y}-${String(m + 1).padStart(2, '0')}`);
-        m--;
-        if (m < 0) { m = 11; y--; }
+        if (--m < 0) { m = 11; y--; }
     }
     return out;
-}
+};
 
-function fmtKm(m) { return (Number(m) / 1000).toFixed(2) + ' km'; }
+const fmtKm = m => (Number(m) / 1000).toFixed(2) + ' km';
 
-function fmtDur(sec) {
+const fmtDur = sec => {
     sec = Number(sec) || 0;
     const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
     if (h > 0) return h + '小时' + (m ? m + '分' : '');
     if (m > 0) return m + '分' + (s ? s + '秒' : '');
     return s + '秒';
-}
+};
 
-function hhmm(dt) { return String(dt).slice(11, 16); }
-function colorOf(i) { return PALETTE[i % PALETTE.length]; }
+const hhmm = dt => String(dt).slice(11, 16);
+const colorOf = i => PALETTE[i % PALETTE.length];
 
-function parseDateParts(dateStr) {
+const parseDateParts = dateStr => {
     const d = new Date(dateStr + 'T00:00:00');
     if (isNaN(d.getTime())) return { mmdd: dateStr, week: '' };
     return { mmdd: dateStr.slice(5), week: WEEKDAYS[d.getDay()] };
-}
+};
 
 /* ============================================================
- * 坐标转换 WGS-84 → GCJ-02
+ * WGS-84 → GCJ-02
  * ============================================================ */
-function outOfChina(lng, lat) {
-    return (lng < 72.004 || lng > 137.8347) || (lat < 0.8293 || lat > 55.8271);
-}
+const outOfChina = (lng, lat) =>
+    (lng < 72.004 || lng > 137.8347) || (lat < 0.8293 || lat > 55.8271);
+
 function transformLat(x, y) {
-    let ret = -100.0 + 2.0*x + 3.0*y + 0.2*y*y + 0.1*x*y + 0.2*Math.sqrt(Math.abs(x));
-    ret += (20.0*Math.sin(6.0*x*Math.PI) + 20.0*Math.sin(2.0*x*Math.PI)) * 2.0/3.0;
-    ret += (20.0*Math.sin(y*Math.PI) + 40.0*Math.sin(y/3.0*Math.PI)) * 2.0/3.0;
-    ret += (160.0*Math.sin(y/12.0*Math.PI) + 320*Math.sin(y*Math.PI/30.0)) * 2.0/3.0;
+    let ret = -100 + 2*x + 3*y + 0.2*y*y + 0.1*x*y + 0.2*Math.sqrt(Math.abs(x));
+    ret += (20*Math.sin(6*x*Math.PI) + 20*Math.sin(2*x*Math.PI)) * 2/3;
+    ret += (20*Math.sin(y*Math.PI) + 40*Math.sin(y/3*Math.PI)) * 2/3;
+    ret += (160*Math.sin(y/12*Math.PI) + 320*Math.sin(y*Math.PI/30)) * 2/3;
     return ret;
 }
 function transformLng(x, y) {
-    let ret = 300.0 + x + 2.0*y + 0.1*x*x + 0.1*x*y + 0.1*Math.sqrt(Math.abs(x));
-    ret += (20.0*Math.sin(6.0*x*Math.PI) + 20.0*Math.sin(2.0*x*Math.PI)) * 2.0/3.0;
-    ret += (20.0*Math.sin(x*Math.PI) + 40.0*Math.sin(x/3.0*Math.PI)) * 2.0/3.0;
-    ret += (150.0*Math.sin(x/12.0*Math.PI) + 300.0*Math.sin(x/30.0*Math.PI)) * 2.0/3.0;
+    let ret = 300 + x + 2*y + 0.1*x*x + 0.1*x*y + 0.1*Math.sqrt(Math.abs(x));
+    ret += (20*Math.sin(6*x*Math.PI) + 20*Math.sin(2*x*Math.PI)) * 2/3;
+    ret += (20*Math.sin(x*Math.PI) + 40*Math.sin(x/3*Math.PI)) * 2/3;
+    ret += (150*Math.sin(x/12*Math.PI) + 300*Math.sin(x/30*Math.PI)) * 2/3;
     return ret;
 }
 function wgs84ToGcj02(lng, lat) {
     if (outOfChina(lng, lat)) return [lng, lat];
     const a = 6378245.0, ee = 0.00669342162296594323;
-    let dLat = transformLat(lng - 105.0, lat - 35.0);
-    let dLng = transformLng(lng - 105.0, lat - 35.0);
-    const radLat = lat / 180.0 * Math.PI;
+    let dLat = transformLat(lng - 105, lat - 35);
+    let dLng = transformLng(lng - 105, lat - 35);
+    const radLat = lat / 180 * Math.PI;
     let magic = Math.sin(radLat);
     magic = 1 - ee * magic * magic;
     const sqrtMagic = Math.sqrt(magic);
-    dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
-    dLng = (dLng * 180.0) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
+    dLat = (dLat * 180) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
+    dLng = (dLng * 180) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
     return [lng + dLng, lat + dLat];
 }
 
@@ -89,28 +87,19 @@ const AMAP = {
 };
 const AMAP_SUBS = ['1','2','3','4'];
 
-/**
- * 生成 iframe 内部 HTML（默认视图）
- */
+/* ============================================================
+ * iframe 内部 HTML 生成
+ * ============================================================ */
 function buildIframeHtml(mode, lng, lat) {
     const gcj = (lng && lat) ? wgs84ToGcj02(lng, lat) : [118.78, 32.0];
     const cLat = gcj[1], cLng = gcj[0];
     const show = !!(lng && lat);
-    const zoom = show ? 16 : 11;
 
-    const markerHtml = show ? `
+    const markerJs = show ? `
       var icon = L.divIcon({
         className: '',
         html: '<div class="car-marker"><div class="car-marker-pulse"></div>' +
-              '<div class="car-marker-dot">' +
-                '<svg viewBox="0 0 64 64" width="16" height="16" fill="none" ' +
-                  'stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">' +
-                  '<circle cx="32" cy="24" r="6" />' +
-                  '<path d="M14 24 L27 24" /><path d="M37 24 L50 24" />' +
-                  '<path d="M22 36 Q22 30 28 30 H36 Q42 30 42 36 V50 Q42 56 36 56 H28 Q22 56 22 50 Z" />' +
-                  '<rect x="26" y="50" width="12" height="14" rx="6" />' +
-                '</svg>' +
-              '</div></div>',
+              '<div class="car-marker-dot">' + CAR_SVG + '</div></div>',
         iconSize: [40, 40], iconAnchor: [20, 20]
       });
       L.marker([${cLat}, ${cLng}], { icon: icon, zIndexOffset: 3000 }).addTo(map);` : '';
@@ -137,19 +126,17 @@ function buildIframeHtml(mode, lng, lat) {
         100% { transform:scale(1.7); opacity:0; }
       }
     `, `
+      var CAR_SVG = ${JSON.stringify(CAR_SVG)};
       var map = L.map('map', {
         zoomControl: false, attributionControl: false, preferCanvas: true
-      }).setView([${cLat}, ${cLng}], ${zoom});
+      }).setView([${cLat}, ${cLng}], ${show ? 16 : 11});
       ${tileLayerCode(mode)}
-      ${markerHtml}
+      ${markerJs}
       setTimeout(function() { map.invalidateSize(); }, 50);
       setTimeout(function() { map.invalidateSize(); }, 200);
     `);
 }
 
-/**
- * 生成 iframe 内部 HTML（历史轨迹视图）
- */
 function buildHistoryIframeHtml(mode, tracks, currentPos) {
     const tracksJson = tracks.map(t => ({
         color: t.color,
@@ -247,13 +234,13 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
       var tracks = ${JSON.stringify(tracksJson)};
       var curPos = ${curJson ? JSON.stringify(curJson) : 'null'};
       var SUBS = ${JSON.stringify(AMAP_SUBS)};
+      var CAR_SVG = ${JSON.stringify(CAR_SVG)};
 
       var map, baseLayer, labelLayer, globalActiveDot = null, trackLayers = [];
 
       function setBasemap(mode) {
         if (baseLayer)  { map.removeLayer(baseLayer);  baseLayer = null; }
         if (labelLayer) { map.removeLayer(labelLayer); labelLayer = null; }
-
         var opts = { subdomains: SUBS, maxZoom: 19, minZoom: 3 };
         if (mode === 'satellite') {
           baseLayer = L.tileLayer('${AMAP.satellite}', opts);
@@ -265,7 +252,6 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
         }
         baseLayer.addTo(map);
         if (labelLayer) labelLayer.addTo(map);
-
         document.querySelectorAll('.basemap-switch button').forEach(function(b) {
           b.classList.toggle('active', b.dataset.mode === mode);
         });
@@ -280,11 +266,9 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
         if (s < 40)  return 'sp-hi';
         return 'sp-mx';
       }
-
       function esc(s) {
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       }
-
       function findClosestIndex(points, target) {
         var minDist = Infinity, minIdx = 0;
         for (var i = 0; i < points.length; i++) {
@@ -295,7 +279,6 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
         }
         return minIdx;
       }
-
       function showPointInfo(t, pts, pointIdx) {
         var p = pts[pointIdx];
         if (!p) return;
@@ -304,7 +287,6 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
           radius: 8, color: '#fff', weight: 3,
           fillColor: t.color, fillOpacity: 1, zIndexOffset: 2000
         }).addTo(map);
-
         var timeStr = p.time ? String(p.time).slice(11, 19) : '--';
         var html = '<div class="pp-head">' +
             '<span class="pp-badge" style="background:' + t.color + '">' + (t.index + 1) + '</span>' +
@@ -315,13 +297,11 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
             '<b class="' + speedClass(p.speed) + '">' + Number(p.speed).toFixed(0) + ' km/h</b></div>' +
           '<div class="pp-row"><span>方向</span>' +
             '<b>' + Number(p.heading).toFixed(0) + '°</b></div>';
-
         L.popup({
           className: 'dark-popup', closeButton: true, autoPan: true,
           offset: [0, -6], maxWidth: 260
         }).setLatLng(p.latlng).setContent(html).openOn(map);
       }
-
       function highlightTrack(index) {
         trackLayers.forEach(function(o, i) {
           if (!o.line) return;
@@ -341,7 +321,6 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
           }
         });
       }
-
       window.addEventListener('message', function(e) {
         if (!e.data || e.data.type !== 'tailg-highlight') return;
         var idx = Number(e.data.index);
@@ -352,9 +331,7 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
         map = L.map('map', {
           zoomControl: true, attributionControl: false, preferCanvas: true
         }).setView([32.0, 118.78], 11);
-
         setBasemap('${mode}');
-
         var allBounds = [];
 
         tracks.forEach(function(t) {
@@ -402,28 +379,18 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
             startMarker: startMarker, endMarker: endMarker
           });
         });
-
         trackLayers.sort(function(a, b) { return a.index - b.index; });
 
         if (curPos) {
           var curIcon = L.divIcon({
             className: '',
             html: '<div class="cur-marker"><div class="cur-marker-pulse"></div>' +
-                  '<div class="cur-marker-dot">' +
-                    '<svg viewBox="0 0 64 64" width="16" height="16" fill="none" ' +
-                      'stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">' +
-                      '<circle cx="32" cy="24" r="6" />' +
-                      '<path d="M14 24 L27 24" /><path d="M37 24 L50 24" />' +
-                      '<path d="M22 36 Q22 30 28 30 H36 Q42 30 42 36 V50 Q42 56 36 56 H28 Q22 56 22 50 Z" />' +
-                      '<rect x="26" y="50" width="12" height="14" rx="6" />' +
-                    '</svg>' +
-                  '</div></div>',
+                  '<div class="cur-marker-dot">' + CAR_SVG + '</div></div>',
             iconSize: [40, 40], iconAnchor: [20, 20]
           });
           L.marker([curPos.lat, curPos.lng], { icon: curIcon, zIndexOffset: 3000 })
             .addTo(map)
             .bindTooltip('当前位置', { direction: 'top', offset: [0, -20] });
-
           allBounds.push([curPos.lat, curPos.lng]);
         }
 
@@ -436,7 +403,6 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
         document.querySelectorAll('.basemap-switch button').forEach(function(btn) {
           btn.addEventListener('click', function() { setBasemap(btn.dataset.mode); });
         });
-
         setTimeout(function() { map.invalidateSize(); }, 50);
         setTimeout(function() { map.invalidateSize(); }, 200);
       }
@@ -448,6 +414,16 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
       }
     `, mode);
 }
+
+/* 车辆图标 SVG（复用于默认卡片与历史轨迹） */
+const CAR_SVG =
+    '<svg viewBox="0 0 64 64" width="16" height="16" fill="none" ' +
+      'stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">' +
+      '<circle cx="32" cy="24" r="6" />' +
+      '<path d="M14 24 L27 24" /><path d="M37 24 L50 24" />' +
+      '<path d="M22 36 Q22 30 28 30 H36 Q42 30 42 36 V50 Q42 56 36 56 H28 Q22 56 22 50 Z" />' +
+      '<rect x="26" y="50" width="12" height="14" rx="6" />' +
+    '</svg>';
 
 /* ============================================================
  * iframe 通用外壳
@@ -479,9 +455,7 @@ ${switchHtml}
 
 function tileLayerCode(mode) {
     const opts = `{subdomains:${JSON.stringify(AMAP_SUBS)}, maxZoom:19, minZoom:3}`;
-    if (mode === 'satellite') {
-        return `L.tileLayer('${AMAP.satellite}', ${opts}).addTo(map);`;
-    }
+    if (mode === 'satellite') return `L.tileLayer('${AMAP.satellite}', ${opts}).addTo(map);`;
     if (mode === 'hybrid') {
         return `L.tileLayer('${AMAP.satellite}', ${opts}).addTo(map);
                 L.tileLayer('${AMAP.hybridLabel}', ${opts}).addTo(map);`;
@@ -495,6 +469,8 @@ function tileLayerCode(mode) {
 const LitElement = Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
+
+const TRACKER_RE = /^device_tracker\.tailg_([a-z0-9]{4})_location$/;
 
 class TailgMapCard extends LitElement {
     static get properties() {
@@ -520,12 +496,24 @@ class TailgMapCard extends LitElement {
                 background: #e5e7eb;
             }
             iframe { width: 100%; height: 100%; border: none; display: block; pointer-events: none; }
+
             .overlay {
                 position: absolute; inset: 0; z-index: 10;
-                display: flex; flex-direction: column; justify-content: flex-end;
+                display: flex; flex-direction: column;
+                justify-content: space-between;
                 pointer-events: auto; cursor: pointer;
                 padding: 10px;
-                background: linear-gradient(transparent 60%, rgba(0,0,0,.55));
+                background: linear-gradient(rgba(0,0,0,.55), transparent 40%, transparent 60%, rgba(0,0,0,.55));
+            }
+            .top-row {
+                display: flex; align-items: flex-start;
+                justify-content: space-between; gap: 8px;
+                min-width: 0;
+            }
+            .top-bar {
+                display: flex; flex-direction: column; gap: 4px;
+                align-items: flex-start;
+                min-width: 0; flex: 1 1 auto;
             }
             .row1 {
                 display: flex; align-items: center; gap: 6px;
@@ -533,9 +521,10 @@ class TailgMapCard extends LitElement {
                 text-shadow: 0 1px 3px rgba(0,0,0,.6);
             }
             .row2 {
-                color: #e2e8f0; font-size: 11px; margin-top: 2px;
+                color: #e2e8f0; font-size: 11px;
                 text-shadow: 0 1px 2px rgba(0,0,0,.6);
                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                max-width: 100%;
             }
             .dot {
                 width: 8px; height: 8px; border-radius: 50%;
@@ -543,12 +532,24 @@ class TailgMapCard extends LitElement {
                 box-shadow: 0 0 0 3px rgba(255,255,255,.25);
             }
             .dot.online { background: #22c55e; }
+
             .hint {
-                position: absolute; bottom: 20px; right: 8px; z-index: 100;
+                display: inline-block; flex: 0 0 auto;
                 background: rgba(15,23,42,.75); color: #e2e8f0;
                 padding: 4px 8px; border-radius: 6px;
                 font-size: 10px; backdrop-filter: blur(6px);
-                pointer-events: none;
+                pointer-events: none; white-space: nowrap;
+            }
+            .bottom-bar {
+                display: flex; align-items: center; gap: 6px;
+                color: #fff; font-size: 12px;
+                text-shadow: 0 1px 3px rgba(0,0,0,.6);
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                max-width: 100%;
+            }
+            .bottom-bar ha-icon { --mdc-icon-size: 14px; flex: 0 0 auto; opacity: .9; }
+            .bottom-bar span {
+                overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
             }
             .error-box {
                 display: flex; align-items: center; justify-content: center;
@@ -560,13 +561,9 @@ class TailgMapCard extends LitElement {
     setConfig(config) { this.config = config || {}; }
 
     static getStubConfig(hass) {
-        let tracker = "";
-        if (hass) {
-            const m = Object.keys(hass.states).find(id =>
-                /^device_tracker\.tailg_[a-z0-9]{4}_location$/.test(id)
-            );
-            if (m) tracker = m;
-        }
+        const tracker = hass
+            ? (Object.keys(hass.states).find(id => TRACKER_RE.test(id)) || "")
+            : "";
         return { type: "custom:tailg-map-card", entity: tracker };
     }
 
@@ -587,10 +584,7 @@ class TailgMapCard extends LitElement {
 
     _getTrackerEntityId() {
         if (this.config.entity) return this.config.entity;
-        const ids = Object.keys(this.hass.states).filter(id =>
-            /^device_tracker\.tailg_[a-z0-9]{4}_location$/.test(id)
-        );
-        return ids[0] || "";
+        return Object.keys(this.hass.states).find(id => TRACKER_RE.test(id)) || "";
     }
 
     _renderIframe() {
@@ -639,8 +633,9 @@ class TailgMapCard extends LitElement {
         const st = eid ? this.hass.states[eid] : null;
         const attrs = st ? st.attributes : {};
         const online = !!attrs.online;
-        const battery = (attrs.battery != null) ? attrs.battery + "%" : "--";
-        const voltage = (attrs.voltage != null) ? attrs.voltage + " V" : "--";
+        const battery = attrs.battery != null ? attrs.battery + "%" : "--";
+        const voltage = attrs.voltage != null ? attrs.voltage + " V" : "--";
+        const address = attrs.address || attrs.location || attrs.address_name || "";
 
         return html`
             <ha-card>
@@ -648,13 +643,22 @@ class TailgMapCard extends LitElement {
                     ${this._iframeSrcdoc
                         ? html`<iframe .srcdoc=${this._iframeSrcdoc} scrolling="no"></iframe>`
                         : html`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8">加载中…</div>`}
-                    <div class="hint">点击查看历史轨迹</div>
                     <div class="overlay" @click=${this._openHistory}>
-                        <div class="row1">
-                            <span class="dot ${online ? 'online' : ''}"></span>
-                            ${online ? "在线" : "离线"} · ${battery} · ${voltage}
+                        <div class="top-row">
+                            <div class="top-bar">
+                                <div class="row1">
+                                    <span class="dot ${online ? 'online' : ''}"></span>
+                                    ${online ? "在线" : "离线"} · ${battery} · ${voltage}
+                                </div>
+                                <div class="row2">${attrs.gps_report_time || ""}</div>
+                            </div>
+                            <div class="hint">点击查看历史轨迹</div>
                         </div>
-                        <div class="row2">${attrs.gps_report_time || ""}</div>
+                        ${address ? html`
+                            <div class="bottom-bar">
+                                <ha-icon icon="mdi:map-marker"></ha-icon>
+                                <span>${address}</span>
+                            </div>` : ''}
                     </div>
                 </div>
             </ha-card>
@@ -686,14 +690,12 @@ class TailgHistoryDialog extends LitElement {
             :host { display: block; }
             .dialog {
                 position: fixed; top: 0; left: 0;
-                width: 100vw; height: 100vh;
-                z-index: 9999;
+                width: 100vw; height: 100vh; z-index: 9999;
                 display: flex; flex-direction: column;
                 background: var(--primary-background-color, #0f172a);
                 color: var(--primary-text-color);
                 overflow: hidden; box-sizing: border-box;
             }
-
             .head {
                 display: flex; align-items: center; gap: 8px;
                 padding: 8px 12px;
@@ -730,7 +732,6 @@ class TailgHistoryDialog extends LitElement {
                 overflow: hidden;
                 border-top: 1px solid var(--divider-color);
             }
-
             .side-head {
                 padding: 8px 12px;
                 border-bottom: 1px solid var(--divider-color);
@@ -746,7 +747,6 @@ class TailgHistoryDialog extends LitElement {
                 font-size: 13px; font-family: inherit;
                 min-width: 110px;
             }
-
             .row-stats {
                 display: flex; align-items: baseline; gap: 0;
                 font-variant-numeric: tabular-nums;
@@ -757,14 +757,12 @@ class TailgHistoryDialog extends LitElement {
             .row-stats > .col-trips { width: 50px; }
             .row-stats > .col-km    { width: 66px; }
             .row-stats > .col-dur   { width: 77px; }
-
             .month-stats {
                 margin-left: auto;
                 font-size: 12px;
                 color: var(--secondary-text-color);
                 font-weight: 600;
             }
-
             .day-list {
                 flex: 1 1 auto; overflow-y: auto;
                 padding: 6px 0 20px; min-height: 0;
@@ -775,7 +773,6 @@ class TailgHistoryDialog extends LitElement {
                 border: 1px solid transparent; overflow: hidden;
             }
             .day-group.selected { border-color: var(--primary-color); }
-
             .day-head {
                 display: flex; align-items: center; justify-content: space-between;
                 padding: 10px 12px; cursor: pointer;
@@ -797,7 +794,6 @@ class TailgHistoryDialog extends LitElement {
                 white-space: nowrap;
             }
             .day-week { font-size: 11px; opacity: .7; white-space: nowrap; }
-
             .day-head-right {
                 display: flex; align-items: baseline; gap: 0;
                 flex: 0 0 auto; margin-left: auto;
@@ -809,10 +805,8 @@ class TailgHistoryDialog extends LitElement {
                 font-size: 11px; opacity: .85;
                 text-align: right; white-space: nowrap; flex: 0 0 auto;
             }
-
             .day-trips { display: none; padding: 4px 0; }
             .day-group.expanded .day-trips { display: block; }
-
             .trip {
                 display: flex; gap: 8px; align-items: center;
                 padding: 7px 12px; cursor: pointer; font-size: 12px;
@@ -839,19 +833,14 @@ class TailgHistoryDialog extends LitElement {
 
             @media (min-width: 821px) {
                 .dialog { flex-direction: row; }
-                .map-wrap {
-                    order: 2; flex: 1 1 auto;
-                    height: 100%; width: auto;
-                }
+                .map-wrap { order: 2; flex: 1 1 auto; height: 100%; width: auto; }
                 .list-wrap {
-                    order: 1; width: 420px; flex: 0 0 420px;
-                    height: 100%;
+                    order: 1; width: 420px; flex: 0 0 420px; height: 100%;
                     border-top: none;
                     border-right: 1px solid var(--divider-color);
                 }
                 .head {
-                    position: absolute;
-                    top: 0; left: 0; right: 0;
+                    position: absolute; top: 0; left: 0; right: 0;
                     z-index: 100;
                     height: 54px; flex: 0 0 54px;
                     padding: 10px 16px;
@@ -866,7 +855,6 @@ class TailgHistoryDialog extends LitElement {
                 .row-stats > .col-dur   { width: 88px; }
                 .day-head { font-size: 13px; padding: 12px 14px; gap: 10px; }
             }
-
             @media (max-width: 380px) {
                 .head h2 { font-size: 13px; }
                 .side-head { padding: 6px 10px; gap: 8px; }
@@ -902,7 +890,6 @@ class TailgHistoryDialog extends LitElement {
             history.pushState({ tailgDialog: true }, '');
             this._historyPushed = true;
         } catch (e) { console.warn('[tailg-history] pushState 失败', e); }
-
         this._onPopState = () => {
             if (this._historyPushed) {
                 this._historyPushed = false;
@@ -927,41 +914,28 @@ class TailgHistoryDialog extends LitElement {
     async firstUpdated() {
         this._months = getRecentMonths(10);
         this._month = this._months[0];
-
-        // ① 先只展示当前车辆位置
-        this._focusCurrent();
-
-        // ② 加载月份数据（内部会自动选中最近一天 / 无行程时清空）
-        await this._loadMonth(this._month);
+        this._focusCurrent();            // ① 先展示当前车辆位置
+        await this._loadMonth(this._month); // ② 加载月份（自动选中最近一天 / 无行程清空）
     }
 
-    /**
-     * 只展示当前车辆位置（无轨迹）
-     */
+    /** 只展示当前车辆位置（无轨迹） */
     _focusCurrent() {
-        const cur = this._getCurrentPosition();
         this._currentTracks = [];
-        this._iframeSrcdoc = buildHistoryIframeHtml(
-            this._baseMode, [], cur
-        );
+        this._iframeSrcdoc = buildHistoryIframeHtml(this._baseMode, [], this._getCurrentPosition());
     }
 
     async _loadMonth(month) {
         this._loading = true;
         try {
-            const resp = await this.hass.callApi(
-                "GET", `tailg/month?month=${encodeURIComponent(month)}`
-            );
+            const resp = await this.hass.callApi("GET", `tailg/month?month=${encodeURIComponent(month)}`);
             this._days = this._groupDays(resp.data || []);
             this._activeTrip = -1;
             this.requestUpdate();
             await this.updateComplete;
 
             if (this._days.length > 0) {
-                // 自动打开该月最近一天的行程
                 await this._selectDay(this._days[0].date);
             } else {
-                // 无行程月份：清空轨迹，只保留当前车辆位置
                 this._focusCurrent();
                 this.requestUpdate();
             }
@@ -974,14 +948,14 @@ class TailgHistoryDialog extends LitElement {
         const out = [];
         data.forEach(d => {
             const trips = d.deviceTravelDtoList || [];
-            if (trips.length === 0) return;
-            let totalMileage = 0, totalDuration = 0;
+            if (!trips.length) return;
+            let mileage = 0, duration = 0;
             trips.forEach(t => {
-                totalMileage += Number(t.mileage || 0);
-                totalDuration += this._duration(t);
+                mileage += Number(t.mileage || 0);
+                duration += this._duration(t);
             });
             out.push({
-                date: d.travelDate, totalMileage, totalDuration,
+                date: d.travelDate, totalMileage: mileage, totalDuration: duration,
                 trips: trips.map(t => ({
                     id: t.deviceTravelId,
                     start_time: t.startTime, end_time: t.endTime,
@@ -1003,9 +977,7 @@ class TailgHistoryDialog extends LitElement {
     }
 
     _monthSummary() {
-        if (!this._days || this._days.length === 0) {
-            return { days: 0, trips: 0, km: '0 km', dur: '0秒' };
-        }
+        if (!this._days?.length) return { days: 0, trips: 0, km: '0 km', dur: '0秒' };
         let mileage = 0, dur = 0, trips = 0;
         this._days.forEach(d => {
             mileage += d.totalMileage;
@@ -1023,19 +995,15 @@ class TailgHistoryDialog extends LitElement {
             return;
         }
         this._activeTrip = -1;
-        const groups = this.shadowRoot.querySelectorAll(".day-group");
-        groups.forEach(g => {
-            if (g.dataset.date === date) g.classList.add("selected", "expanded");
-            else g.classList.remove("selected", "expanded");
+        this.shadowRoot.querySelectorAll(".day-group").forEach(g => {
+            g.classList.toggle("selected", g.dataset.date === date);
+            g.classList.toggle("expanded", g.dataset.date === date);
         });
         await this._loadDayTracks(day);
     }
 
     _getTrackerEntityId() {
-        const ids = Object.keys(this.hass.states).filter(id =>
-            /^device_tracker\.tailg_([a-z0-9]{4})_location$/.test(id)
-        );
-        return ids[0] || "";
+        return Object.keys(this.hass.states).find(id => TRACKER_RE.test(id)) || "";
     }
 
     _getCurrentPosition() {
@@ -1057,34 +1025,26 @@ class TailgHistoryDialog extends LitElement {
             const t = tripsReversed[i];
             let points = [];
             try {
-                const resp = await this.hass.callApi(
-                    "GET", `tailg/day?id=${encodeURIComponent(t.id)}`
-                );
+                const resp = await this.hass.callApi("GET", `tailg/day?id=${encodeURIComponent(t.id)}`);
                 points = resp.data || [];
             } catch (err) {
                 console.warn("[tailg-history] 拉取轨迹失败", t.id, err);
                 continue;
             }
-            if (points.length === 0) continue;
-            allTracks.push({ color: colorOf(i), index: i, points });
+            if (points.length) allTracks.push({ color: colorOf(i), index: i, points });
         }
 
         this._currentTracks = allTracks;
-        this._iframeSrcdoc = buildHistoryIframeHtml(
-            this._baseMode, allTracks, this._getCurrentPosition()
-        );
+        this._iframeSrcdoc = buildHistoryIframeHtml(this._baseMode, allTracks, this._getCurrentPosition());
     }
 
     _onTripClick(newIndex, e) {
         e.stopPropagation();
-        const next = (this._activeTrip === newIndex) ? -1 : newIndex;
+        const next = this._activeTrip === newIndex ? -1 : newIndex;
         this._activeTrip = next;
-
         const iframe = this.shadowRoot.querySelector(".map-wrap iframe");
-        if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage(
-                { type: 'tailg-highlight', index: next }, '*'
-            );
+        if (iframe?.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'tailg-highlight', index: next }, '*');
         }
     }
 
@@ -1093,9 +1053,7 @@ class TailgHistoryDialog extends LitElement {
             this._historyPushed = false;
             try { history.back(); } catch (e) {}
             setTimeout(() => {
-                if (this.parentNode) {
-                    this.dispatchEvent(new CustomEvent("dialog-closed", { bubbles: true }));
-                }
+                if (this.parentNode) this.dispatchEvent(new CustomEvent("dialog-closed", { bubbles: true }));
             }, 100);
             return;
         }
@@ -1122,22 +1080,18 @@ class TailgHistoryDialog extends LitElement {
                 <div class="list-wrap">
                     <div class="side-head">
                         <select class="month-select" .value=${this._month}
-                                @change=${(e) => {
-                                    this._month = e.target.value;
-                                    this._loadMonth(this._month);
-                                }}>
+                                @change=${e => { this._month = e.target.value; this._loadMonth(this._month); }}>
                             ${this._months.map(mo => html`
                                 <option value=${mo} ?selected=${mo === this._month}>${mo}</option>
                             `)}
                         </select>
-                        ${this._days && this._days.length > 0
-                            ? html`<div class="month-stats row-stats">
-                                      <span>${m.days} 天</span>
-                                      <span class="col-trips">${m.trips} 段</span>
-                                      <span class="col-km">${m.km}</span>
-                                      <span class="col-dur">${m.dur}</span>
-                                   </div>`
-                            : ''}
+                        ${this._days?.length ? html`
+                            <div class="month-stats row-stats">
+                                <span>${m.days} 天</span>
+                                <span class="col-trips">${m.trips} 段</span>
+                                <span class="col-km">${m.km}</span>
+                                <span class="col-dur">${m.dur}</span>
+                            </div>` : ''}
                     </div>
 
                     <div class="day-list">
@@ -1172,7 +1126,7 @@ class TailgHistoryDialog extends LitElement {
                 <div class="day-trips">
                     ${tripsReversed.map((t, newIndex) => html`
                         <div class="trip ${this._activeTrip === newIndex ? 'active' : ''}"
-                             @click=${(e) => this._onTripClick(newIndex, e)}>
+                             @click=${e => this._onTripClick(newIndex, e)}>
                             <div class="trip-dot" style="background:${colorOf(newIndex)}">${newIndex + 1}</div>
                             <div class="trip-body">
                                 <div class="trip-line1">

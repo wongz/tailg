@@ -3,7 +3,6 @@
 # ==================== 集成标识 ====================
 DOMAIN  = "tailg"
 NAME    = "TAILG"
-VERSION = "1.0.0"
 
 # ==================== 接口配置 ====================
 API_URL = "https://www.tailgdd.com/v1/api/app/centralControl/carStatus"

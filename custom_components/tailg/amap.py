@@ -75,6 +75,7 @@ async def async_reverse_geocode(lng: float, lat: float,
     if lng is None or lat is None:
         return None
 
+    amap_key = (amap_key or "").strip()
     if not amap_key:
         return None
 
