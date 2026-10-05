@@ -87,6 +87,16 @@ const AMAP = {
 };
 const AMAP_SUBS = ['1','2','3','4'];
 
+/* 车辆图标 SVG（默认卡片与历史轨迹共用） */
+const CAR_SVG =
+    '<svg viewBox="0 0 64 64" width="16" height="16" fill="none" ' +
+      'stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">' +
+      '<circle cx="32" cy="24" r="6" />' +
+      '<path d="M14 24 L27 24" /><path d="M37 24 L50 24" />' +
+      '<path d="M22 36 Q22 30 28 30 H36 Q42 30 42 36 V50 Q42 56 36 56 H28 Q22 56 22 50 Z" />' +
+      '<rect x="26" y="50" width="12" height="14" rx="6" />' +
+    '</svg>';
+
 /* ============================================================
  * iframe 内部 HTML 生成
  * ============================================================ */
@@ -255,6 +265,7 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
         document.querySelectorAll('.basemap-switch button').forEach(function(b) {
           b.classList.toggle('active', b.dataset.mode === mode);
         });
+        try { parent.postMessage({ type: 'tailg-basemap', mode: mode }, '*'); } catch (e) {}
         setTimeout(function() { map.invalidateSize(); }, 50);
       }
 
@@ -414,16 +425,6 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
       }
     `, mode);
 }
-
-/* 车辆图标 SVG（复用于默认卡片与历史轨迹） */
-const CAR_SVG =
-    '<svg viewBox="0 0 64 64" width="16" height="16" fill="none" ' +
-      'stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">' +
-      '<circle cx="32" cy="24" r="6" />' +
-      '<path d="M14 24 L27 24" /><path d="M37 24 L50 24" />' +
-      '<path d="M22 36 Q22 30 28 30 H36 Q42 30 42 36 V50 Q42 56 36 56 H28 Q22 56 22 50 Z" />' +
-      '<rect x="26" y="50" width="12" height="14" rx="6" />' +
-    '</svg>';
 
 /* ============================================================
  * iframe 通用外壳
@@ -682,6 +683,9 @@ class TailgHistoryDialog extends LitElement {
             _loading:  { type: Boolean },
             _baseMode: { type: String },
             _iframeSrcdoc: { type: String },
+            _trackLoading: { type: Boolean },
+            _trackLoaded:  { type: Number },
+            _trackTotal:   { type: Number },
         };
     }
 
@@ -724,6 +728,42 @@ class TailgHistoryDialog extends LitElement {
                 overflow: hidden; background: #e5e7eb;
             }
             .map-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
+
+            .track-loading {
+                position: absolute; inset: 0;
+                z-index: 500;
+                display: flex; flex-direction: column;
+                align-items: center; justify-content: center;
+                gap: 10px;
+                background: rgba(15,23,42,.55);
+                backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+                color: #f1f5f9;
+                pointer-events: none;
+            }
+            .track-loading .spinner {
+                width: 32px; height: 32px;
+                border: 3px solid rgba(255,255,255,.25);
+                border-top-color: #3b82f6;
+                border-radius: 50%;
+                animation: tlSpin .8s linear infinite;
+            }
+            .track-loading .label {
+                font-size: 13px; font-weight: 600;
+                font-variant-numeric: tabular-nums;
+                text-shadow: 0 1px 3px rgba(0,0,0,.6);
+            }
+            .track-loading .bar {
+                width: 160px; height: 4px;
+                background: rgba(255,255,255,.2);
+                border-radius: 2px; overflow: hidden;
+            }
+            .track-loading .bar > i {
+                display: block; height: 100%;
+                background: #3b82f6;
+                border-radius: 2px;
+                transition: width .2s;
+            }
+            @keyframes tlSpin { to { transform: rotate(360deg); } }
 
             .list-wrap {
                 flex: 1 1 auto; min-height: 0;
@@ -882,6 +922,10 @@ class TailgHistoryDialog extends LitElement {
         this._currentTracks = [];
         this._historyPushed = false;
         this._onPopState = null;
+        this._onBasemapMsg = null;
+        this._trackLoading = false;
+        this._trackLoaded = 0;
+        this._trackTotal = 0;
     }
 
     connectedCallback() {
@@ -890,6 +934,7 @@ class TailgHistoryDialog extends LitElement {
             history.pushState({ tailgDialog: true }, '');
             this._historyPushed = true;
         } catch (e) { console.warn('[tailg-history] pushState 失败', e); }
+
         this._onPopState = () => {
             if (this._historyPushed) {
                 this._historyPushed = false;
@@ -897,6 +942,14 @@ class TailgHistoryDialog extends LitElement {
             }
         };
         window.addEventListener('popstate', this._onPopState);
+
+        // 同步 iframe 内的底图模式切换
+        this._onBasemapMsg = (e) => {
+            if (e.data && e.data.type === 'tailg-basemap' && e.data.mode) {
+                this._baseMode = e.data.mode;
+            }
+        };
+        window.addEventListener('message', this._onBasemapMsg);
     }
 
     disconnectedCallback() {
@@ -904,6 +957,10 @@ class TailgHistoryDialog extends LitElement {
         if (this._onPopState) {
             window.removeEventListener('popstate', this._onPopState);
             this._onPopState = null;
+        }
+        if (this._onBasemapMsg) {
+            window.removeEventListener('message', this._onBasemapMsg);
+            this._onBasemapMsg = null;
         }
     }
 
@@ -1019,23 +1076,39 @@ class TailgHistoryDialog extends LitElement {
 
     async _loadDayTracks(day) {
         const tripsReversed = day.trips.slice().reverse();
-        const allTracks = [];
-
-        for (let i = 0; i < tripsReversed.length; i++) {
-            const t = tripsReversed[i];
+        const total = tripsReversed.length;
+    
+        // 开始加载：先重置为「仅当前位置」+ 显示进度浮层
+        this._trackLoading = true;
+        this._trackLoaded = 0;
+        this._trackTotal = total;
+        this._activeTrip = -1;
+    
+        this._currentTracks = [];
+        this._iframeSrcdoc = buildHistoryIframeHtml(this._baseMode, [], this._getCurrentPosition());
+        this.requestUpdate();
+        await this.updateComplete;
+    
+        // 并发拉取所有轨迹段
+        const results = await Promise.all(tripsReversed.map(async (t, i) => {
             let points = [];
             try {
                 const resp = await this.hass.callApi("GET", `tailg/day?id=${encodeURIComponent(t.id)}`);
                 points = resp.data || [];
             } catch (err) {
                 console.warn("[tailg-history] 拉取轨迹失败", t.id, err);
-                continue;
             }
-            if (points.length) allTracks.push({ color: colorOf(i), index: i, points });
-        }
-
+            this._trackLoaded++;
+            this.requestUpdate();
+            return points.length ? { color: colorOf(i), index: i, points } : null;
+        }));
+    
+        const allTracks = results.filter(Boolean);
+    
         this._currentTracks = allTracks;
         this._iframeSrcdoc = buildHistoryIframeHtml(this._baseMode, allTracks, this._getCurrentPosition());
+        this._trackLoading = false;
+        this.requestUpdate();
     }
 
     _onTripClick(newIndex, e) {
@@ -1062,6 +1135,10 @@ class TailgHistoryDialog extends LitElement {
 
     render() {
         const m = this._monthSummary();
+        const pct = this._trackTotal > 0
+            ? Math.round(this._trackLoaded / this._trackTotal * 100)
+            : 0;
+
         return html`
             <div class="dialog">
                 <div class="head">
@@ -1075,6 +1152,17 @@ class TailgHistoryDialog extends LitElement {
                     ${this._iframeSrcdoc
                         ? html`<iframe .srcdoc=${this._iframeSrcdoc} scrolling="no"></iframe>`
                         : html`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8">加载中…</div>`}
+                    ${this._trackLoading ? html`
+                        <div class="track-loading">
+                            <div class="spinner"></div>
+                            <div class="label">
+                                ${this._trackTotal > 0
+                                    ? `加载轨迹 ${this._trackLoaded}/${this._trackTotal}`
+                                    : '加载轨迹…'}
+                            </div>
+                            ${this._trackTotal > 0 ? html`
+                                <div class="bar"><i style="width:${pct}%"></i></div>` : ''}
+                        </div>` : ''}
                 </div>
 
                 <div class="list-wrap">
