@@ -82,7 +82,6 @@ class TailgCard extends LitElement {
                 gap: 2px;
                 flex: 0 0 auto;
                 min-width: 44px;
-                //color: #22c55e;
             }
             .battery-badge ha-icon {
                 --mdc-icon-size: 22px;
@@ -99,6 +98,14 @@ class TailgCard extends LitElement {
             .battery-badge.critical { color: #ef4444; }
             .battery-badge.empty    { color: var(--secondary-text-color); }
             .battery-badge.empty .pct { font-weight: 400; }
+            .battery-badge.charging { color: #22c55e; }
+            .battery-badge.charging ha-icon {
+                animation: batteryPulse 1.6s ease-in-out infinite;
+            }
+            @keyframes batteryPulse {
+                0%, 100% { opacity: 1; }
+                50%      { opacity: .5; }
+            }
 
             /* ---------- 指标网格（2 格） ---------- */
             .metrics {
@@ -202,6 +209,7 @@ class TailgCard extends LitElement {
                 acc:      e("switch", "power"),
                 defence:  e("switch", "defence"),
                 search:   e("button", "search"),
+                charging: e("sensor", "charging"),
             },
         };
     }
@@ -244,8 +252,38 @@ class TailgCard extends LitElement {
         this._call("button", "press", { entity_id: entityId });
     }
 
-    // 电池图标（分档）
-    _batteryIcon(pct) {
+    // 是否充电中
+    _isCharging(entityId) {
+        let s = this._s(entityId);
+        if (s == null || s === "unknown" || s === "unavailable") {
+            if (!entityId) {
+                const auto = Object.keys(this.hass.states).find(id =>
+                    /^(sensor|binary_sensor)\.tailg_[a-z0-9]{4}_charging$/.test(id)
+                );
+                if (auto) s = this._s(auto);
+            }
+        }
+        if (s == null) return false;
+        return s === "4" ||
+               s === "充电中" || s === "charging";
+    }
+
+    // 电池图标（分档；充电时用充电图标）
+    _batteryIcon(pct, charging) {
+        if (charging) {
+            if (pct == null) return "mdi:battery-charging";
+            if (pct >= 95) return "mdi:battery-charging-100";
+            if (pct >= 85) return "mdi:battery-charging-90";
+            if (pct >= 75) return "mdi:battery-charging-80";
+            if (pct >= 65) return "mdi:battery-charging-70";
+            if (pct >= 55) return "mdi:battery-charging-60";
+            if (pct >= 45) return "mdi:battery-charging-50";
+            if (pct >= 35) return "mdi:battery-charging-40";
+            if (pct >= 25) return "mdi:battery-charging-30";
+            if (pct >= 15) return "mdi:battery-charging-20";
+            if (pct >= 5)  return "mdi:battery-charging-10";
+            return "mdi:battery-charging-outline";
+        }
         if (pct == null) return "mdi:battery-unknown";
         if (pct >= 95) return "mdi:battery";
         if (pct >= 85) return "mdi:battery-90";
@@ -266,7 +304,7 @@ class TailgCard extends LitElement {
         if (pct < 50) return "low";
         return "";
     }
-    
+
     _showHistory(entityId) {
         if (!entityId || !this.hass.states[entityId]) return;
         this.dispatchEvent(new CustomEvent('show-dialog', {
@@ -298,8 +336,9 @@ class TailgCard extends LitElement {
         const accOn     = this._isOn(e.acc);
         const defenceOn = this._isOn(e.defence);
 
-        const batteryClass = this._batteryClass(battery);
-        const batteryIcon  = this._batteryIcon(battery);
+        const charging     = this._isCharging(e.charging);
+        const batteryClass = charging ? "charging" : this._batteryClass(battery);
+        const batteryIcon  = this._batteryIcon(battery, charging);
 
         return html`
             <ha-card>
@@ -317,6 +356,7 @@ class TailgCard extends LitElement {
                     </div>
 
                     <div class="battery-badge ${batteryClass}"
+                         title=${charging ? "充电中" : ""}
                          @click=${() => this._showHistory(e.battery)}>
                         <ha-icon icon="${batteryIcon}"></ha-icon>
                         <span class="pct">${battery != null ? battery + "%" : "--"}</span>

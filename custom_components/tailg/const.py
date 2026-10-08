@@ -55,7 +55,7 @@ SENSOR_TYPES = [
         "entity_key": "charging",
         "unit":       None,
         "icon":       "mdi:battery-charging",
-        "value_map":  {0: "未充电", 4: "充电中"},
+        "value_map":  {0: "未充电", 1: "已充满", 4: "充电中"},
         "source":     SOURCE_HTTP,
     },
     {
