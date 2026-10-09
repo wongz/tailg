@@ -171,8 +171,8 @@
 | sensor | sensor.tailg_9179_range | 续航 | 剩余里程（km） |
 | sensor | sensor.tailg_9179_gps_time | 定位时间 | 最后定位时间 |
 | sensor | sensor.tailg_9179_online | 在线 | 在线/离线 |
-| sensor | sensor.tailg_9179_mute | 静音 | 正常/已静音 |
 | sensor | sensor.tailg_9179_status | 车辆状态 | 未知|
+| switch | sensor.tailg_9179_mute | 防盗静音 | 正常/已静音 |
 | switch | switch.tailg_9179_power | 电源 | 开电/关电 |
 | switch | switch.tailg_9179_defence | 防盗 | 设防/撤防 |
 | button | button.tailg_9179_search | 寻车 | 一键鸣笛 |
@@ -210,23 +210,7 @@
               title: "🔋 车辆电量低"
               message: "当前电量 {{ states('sensor.tailg_9179_battery') }}%"
 
-### 3. 每日自动寻车（晚上 10 点）
-
-    automation:
-      - alias: "每日寻车"
-        trigger:
-          - platform: time
-            at: "22:00:00"
-        condition:
-          - condition: state
-            entity_id: switch.tailg_9179_defence
-            state: "on"
-        action:
-          - service: button.press
-            target:
-              entity_id: button.tailg_9179_search
-
-### 4. 未设防提醒
+### 3. 未设防提醒
 
     automation:
       - alias: "车辆未设防提醒"
@@ -272,7 +256,7 @@
 
 **原因**：Leaflet 在 HA 的 Shadow DOM 中拿不到正确尺寸。
 
-**修复**：已用 **iframe 隔离** 方案解决。如果仍出现问题，尝试：
+**排查**：
 1. **强刷浏览器**（`Ctrl + Shift + R`）
 2. 检查 Console 是否有 `Leaflet 加载失败`
 3. 若 `unpkg.com` 被墙，把 `tailg-map-card.js` 里 `LEAFLET_CSS` 和 `LEAFLET_JS` 换成国内 CDN
@@ -364,7 +348,7 @@ MQTT 通信：
 
 ---
 
-## ?? 许可证
+## 📜 许可证
 
 [MIT License](LICENSE)
 
