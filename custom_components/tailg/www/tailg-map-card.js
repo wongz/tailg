@@ -636,7 +636,7 @@ class TailgMapCard extends LitElement {
         const online = !!attrs.online;
         const battery = attrs.battery != null ? attrs.battery + "%" : "--";
         const voltage = attrs.voltage != null ? attrs.voltage + " V" : "--";
-        const address = attrs.address || attrs.location || attrs.address_name || "";
+        const address = attrs.address || "";
 
         return html`
             <ha-card>
