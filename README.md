@@ -77,6 +77,7 @@
        └── custom_components/
            └── tailg/
                ├── __init__.py
+               ├── amap.py
                ├── api.py
                ├── button.py
                ├── config_flow.py
@@ -104,13 +105,12 @@
 | 字段 | 说明 | 示例 |
 |------|------|------|
 | `token` | 请求头 `authorization` 的完整值 | `c3fwod5K...` |
-| `cookie` | 请求头 `Cookie` 的值 | `HWWAFSESTIME=...; HWWAFSESID=...` |
 
 ### 2. 添加集成
 
 1. 打开 **设置 → 设备与服务 → 添加集成**
 2. 搜索 **TAILG**
-3. 填入上一步提取的两个字段
+3. 填入上一步提取的字段
 4. 提交
 
 ### 3. 部署卡片
@@ -144,6 +144,7 @@
       acc:      switch.tailg_9179_power
       defence:  switch.tailg_9179_defence
       search:   button.tailg_9179_search
+      charging:   button.tailg_9179_charging
 
 实体 ID 说明：`tailg_XXXX` 里的 `XXXX` 是车架号后 4 位，例如 `346022600559179` → `9179`。
 
@@ -330,6 +331,7 @@ MQTT 通信：
     ├── manifest.json        # 元数据
     ├── const.py             # 常量定义
     ├── config_flow.py       # 配置流程
+    ├── amap.py               # 高德逆地理
     ├── api.py               # carStatus 接口封装
     ├── coordinator.py       # HTTP 轮询协调器
     ├── http_api.py          # 供前端卡片调用的代理 API
