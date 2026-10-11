@@ -99,13 +99,6 @@ class TailgCard extends LitElement {
             .battery-badge.empty    { color: var(--secondary-text-color); }
             .battery-badge.empty .pct { font-weight: 400; }
             .battery-badge.charging { color: #22c55e; }
-            .battery-badge.charging ha-icon {
-                animation: batteryPulse 1.6s ease-in-out infinite;
-            }
-            @keyframes batteryPulse {
-                0%, 100% { opacity: 1; }
-                50%      { opacity: .5; }
-            }
 
             /* ---------- 指标网格（2 格） ---------- */
             .metrics {

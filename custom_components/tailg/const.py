@@ -63,6 +63,7 @@ SENSOR_TYPES = [
         "name":         "电量",
         "entity_key":   "battery",
         "unit":         "%",
+        "device_class": "battery",
         "icon":         "mdi:battery",
         "source":       SOURCE_HTTP,
     },
