@@ -100,14 +100,20 @@ class TailgCard extends LitElement {
             .battery-badge.empty .pct { font-weight: 400; }
             .battery-badge.charging { color: #22c55e; }
 
-            /* ---------- 指标网格（2 格） ---------- */
+            /* ---------- 指标网格（2 格，居中） ---------- */
             .metrics {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
                 gap: 14px 16px;
                 margin-bottom: 14px;
             }
-            .metric { display: flex; flex-direction: column; gap: 4px; }
+            .metric {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 4px;
+            }
             .metric-label {
                 font-size: 11px;
                 color: var(--secondary-text-color);
@@ -324,7 +330,6 @@ class TailgCard extends LitElement {
         const battery = this._num(e.battery);
         const voltage = this._num(e.voltage);
         const range   = this._num(e.range);
-        const gpsTime = this._formatTime(this._s(e.gps_time));
 
         const accOn     = this._isOn(e.acc);
         const defenceOn = this._isOn(e.defence);
@@ -344,7 +349,7 @@ class TailgCard extends LitElement {
                         <div class="header-name">${name}</div>
                         <div class="header-sub">
                             <span class="status-dot ${online ? 'online' : ''}"></span>
-                            ${online ? "在线" : "离线"}${gpsTime ? ` · ${gpsTime}` : ""}
+                            ${online ? "在线" : "离线"}
                         </div>
                     </div>
 
@@ -395,12 +400,6 @@ class TailgCard extends LitElement {
                 </div>
             </ha-card>
         `;
-    }
-
-    _formatTime(s) {
-        if (!s || s === "unknown" || s === "unavailable") return "";
-        const m = String(s).match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
-        return m ? `${m[1].slice(5)} ${m[2]}` : s;
     }
 }
 
