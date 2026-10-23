@@ -127,7 +127,7 @@ SENSOR_TYPES = [
     },
     {
         "key":        "regeo",
-        "name":       "位置",
+        "name":       "地址",
         "entity_key": "address",
         "unit":       None,
         "icon":       "mdi:map-marker",
