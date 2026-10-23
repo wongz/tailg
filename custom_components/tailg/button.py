@@ -27,6 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
 
 class VehicleButton(ButtonEntity):
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, client, cfg: dict, info: dict):
         self._client = client

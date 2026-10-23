@@ -251,6 +251,19 @@ class TailgCard extends LitElement {
         this._call("button", "press", { entity_id: entityId });
     }
 
+    // 从实体追溯设备名称
+    _deviceName(entityId) {
+        if (!entityId) return "";
+        const st = this.hass.states[entityId];
+        if (!st) return "";
+        const fn = st.attributes.friendly_name;
+        if (!fn) return "";
+        // 去掉常见后缀，保留设备名部分
+        return String(fn)
+            .replace(/\s*(电量)$/,'')
+            .trim();
+    }
+
     // 是否充电中
     _isCharging(entityId) {
         let s = this._s(entityId);
@@ -323,9 +336,9 @@ class TailgCard extends LitElement {
         if (!this.hass) return html``;
 
         const e = this.config.entities || {};
-        const name    = this.config.name
-                        || this._s(e.name)
-                        || "车辆";
+        const name = this.config.name
+                     || this._deviceName(e.battery)
+                     || "车辆";
         const online  = this._isOnline(e.online);
         const battery = this._num(e.battery);
         const voltage = this._num(e.voltage);

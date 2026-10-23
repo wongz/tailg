@@ -30,6 +30,7 @@ class VehicleTracker(CoordinatorEntity, TrackerEntity):
     """车辆位置追踪器。"""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator, info: dict):
         super().__init__(coordinator)

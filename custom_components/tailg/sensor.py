@@ -36,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
 # ============ MQTT 实时传感器 ============
 class MqttSensor(SensorEntity):
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, client, cfg: dict, info: dict):
         self._client = client
@@ -79,6 +80,7 @@ class MqttSensor(SensorEntity):
 # ============ HTTP 轮询传感器 ============
 class HttpSensor(CoordinatorEntity, SensorEntity):
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator, client, cfg: dict, info: dict):
         super().__init__(coordinator)
