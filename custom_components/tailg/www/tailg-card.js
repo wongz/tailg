@@ -160,7 +160,7 @@ class TailgCard extends LitElement {
                 -webkit-tap-highlight-color: transparent;
             }
             .action-btn:hover:not(.disabled) {
-                background: var(--divider-color);
+                #background: var(--divider-color);
             }
             .action-btn:active:not(.disabled) {
                 transform: scale(.97);

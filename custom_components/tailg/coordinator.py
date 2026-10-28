@@ -35,6 +35,21 @@ class TailgHttpCoordinator(DataUpdateCoordinator):
         self._last_lng = None
         self._last_lat = None
         self._last_regeo = None
+        
+        self._acc_on_interval = timedelta(minutes=1)
+        self._acc_off_interval = timedelta(minutes=10)
+
+    def set_interval_by_acc(self, acc: int):
+        """供 MQTT 监听器调用：根据 ACC 状态切换轮询间隔。"""
+        is_acc_on = (acc == 1)
+        new_interval = self._acc_on_interval if is_acc_on else self._acc_off_interval
+        
+        if self.update_interval != new_interval:
+            self.update_interval = new_interval
+            _LOGGER.info(
+                "MQTT 触发间隔调整(ACC=%s)，下轮拉取间隔: %s 秒", 
+                acc, new_interval.total_seconds()
+            )
 
     async def _async_update_data(self):
         data = await async_fetch_car_status(
@@ -43,7 +58,12 @@ class TailgHttpCoordinator(DataUpdateCoordinator):
         if data is None:
             raise UpdateFailed("carStatus 接口返回失败")
 
-        # ★ 尝试逆地理（坐标移动超过 ~50 米才重新查询）
+        # HTTP 兜底：如果 MQTT 没推，以 HTTP 返回的 acc 为准
+        acc = data.get("acc")
+        if acc is not None:
+            self.set_interval_by_acc(acc)
+
+        # 尝试逆地理（坐标移动超过 ~50 米才重新查询
         lng = data.get("longitude")
         lat = data.get("latitude")
         if lng is not None and lat is not None:

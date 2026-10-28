@@ -346,6 +346,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "coordinator": None,
         "creds":       creds,
     }
+    def _handle_mqtt_status(event):
+        if event.get("type") == "status":
+            acc = event["data"].get("ACC")
+            if acc is not None:
+                coordinator.set_interval_by_acc(acc)
+                if acc == 1:
+                    hass.async_create_task(coordinator.async_request_refresh())
+    client.add_listener(_handle_mqtt_status)
 
     # ---------- 4. HTTP 协调器 ----------
     from .coordinator import TailgHttpCoordinator

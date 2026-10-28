@@ -23,7 +23,7 @@ CONF_TOKEN  = "token"
 CONF_COOKIE = "cookie"
 CONF_AMAP_KEY = "amap_key"
 
-DEFAULT_SCAN_INTERVAL = 180
+DEFAULT_SCAN_INTERVAL = 60
 
 # ==================== MQTT 主题模板 ====================
 TOPIC_STATUS_TPL = "S_APP/STATUS/{imei}"
