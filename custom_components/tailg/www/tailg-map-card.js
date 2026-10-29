@@ -251,7 +251,7 @@ function buildHistoryIframeHtml(mode, tracks, currentPos) {
       function setBasemap(mode) {
         if (baseLayer)  { map.removeLayer(baseLayer);  baseLayer = null; }
         if (labelLayer) { map.removeLayer(labelLayer); labelLayer = null; }
-        var opts = { subdomains: SUBS, maxZoom: 19, minZoom: 3 };
+        var opts = { subdomains: SUBS, maxZoom: 18, minZoom: 3 };
         if (mode === 'satellite') {
           baseLayer = L.tileLayer('${AMAP.satellite}', opts);
         } else if (mode === 'hybrid') {
@@ -455,7 +455,7 @@ ${switchHtml}
 }
 
 function tileLayerCode(mode) {
-    const opts = `{subdomains:${JSON.stringify(AMAP_SUBS)}, maxZoom:19, minZoom:3}`;
+    const opts = `{subdomains:${JSON.stringify(AMAP_SUBS)}, maxZoom:18, minZoom:3}`;
     if (mode === 'satellite') return `L.tileLayer('${AMAP.satellite}', ${opts}).addTo(map);`;
     if (mode === 'hybrid') {
         return `L.tileLayer('${AMAP.satellite}', ${opts}).addTo(map);
