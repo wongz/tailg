@@ -37,7 +37,7 @@ class TailgHttpCoordinator(DataUpdateCoordinator):
         self._last_regeo = None
         
         self._acc_on_interval = timedelta(minutes=1)
-        self._acc_off_interval = timedelta(minutes=10)
+        self._acc_off_interval = timedelta(minutes=5)
 
     def set_interval_by_acc(self, acc: int):
         """供 MQTT 监听器调用：根据 ACC 状态切换轮询间隔。"""
