@@ -29,7 +29,7 @@ DEFAULT_SCAN_INTERVAL = 60
 TOPIC_STATUS_TPL = "S_APP/STATUS/{imei}"
 TOPIC_OTA_TPL    = "S_APP/OTA/{imei}"
 TOPIC_CMD_TPL    = "APP_S/CMD/{imei}"
-CLIENT_ID_TPL    = "app_{imei}_{user_id}_android_733"
+CLIENT_ID_TPL    = "app_{imei}_{user_id}_android_123"
 
 # ==================== 控制指令映射 ====================
 CMD_MAP = {
