@@ -100,6 +100,7 @@
 | 字段 | 说明 | 示例 |
 |------|------|------|
 | `token` | 请求头 `authorization` 的完整值 | `c3fwod5K...` |
+参考项目 [https://github.com/100pangci/TL-key](https://github.com/100pangci/TL-key)
 
 ### 2. 添加集成
 
