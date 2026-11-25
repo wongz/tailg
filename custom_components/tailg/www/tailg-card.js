@@ -313,7 +313,7 @@ class TailgCard extends LitElement {
     _batteryClass(pct) {
         if (pct == null) return "empty";
         if (pct < 20) return "critical";
-        if (pct < 50) return "low";
+        if (pct < 40) return "low";
         return "";
     }
 
